@@ -1,8 +1,8 @@
-# SeedStack JPA add-on
+# SeedStack OpenFeign add-on
 
-[![Build status](https://travis-ci.org/seedstack/jpa-addon.svg?branch=master)](https://travis-ci.org/seedstack/jpa-addon) [![Coverage Status](https://coveralls.io/repos/seedstack/jpa-addon/badge.svg?branch=master)](https://coveralls.io/r/seedstack/jpa-addon?branch=master) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.seedstack.addons.jpa/jpa/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/org.seedstack.addons.jpa/jpa)
+[![Build status](https://travis-ci.org/seedstack/feign-addon.svg?branch=master)](https://travis-ci.org/seedstack/feign-addon) [![Coverage Status](https://coveralls.io/repos/seedstack/feign-addon/badge.svg?branch=master)](https://coveralls.io/r/seedstack/feign-addon?branch=master) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.seedstack.addons.feign/feign/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/org.seedstack.addons.feign/feign)
 
-Official JPA integration for SeedStack.
+Official [OpenFeign http client](https://github.com/OpenFeign/feign) integration for SeedStack.
 
 # Copyright and license
 
