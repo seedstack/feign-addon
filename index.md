@@ -1,7 +1,7 @@
 ---
 title: "Feign"
 repo: "https://github.com/seedstack/feign-addon"
-weight: -1
+description: Official integration of OpenFeign, the easy-to-use HTTP client.
 tags:
     - API
     - REST
@@ -13,7 +13,8 @@ menu:
         weight: 10
 ---
 
-This component allows you to configure a java HTTP client very simply.<!--more-->
+This component allows you to define an HTTP client with a simple Java interface that you can then inject and use transparently
+in your code.<!--more-->
 
 {{< dependency g="org.seedstack.addons.feign" a="feign" >}}
 
@@ -27,7 +28,6 @@ First, you need to create an interface annotated by `@FeignApi`, with each metho
 ```java
 @FeignApi
 public interface Api {
-    
     @RequestLine("GET /message")
     List<Message> getMessages();
     
@@ -39,9 +39,8 @@ public interface Api {
 Then, you can use this API by injecting it:
 ```java
 public class MyClass {
-
     @Inject
-    public Api api;
+    private Api api;
     
     public static void main(String... args) {
         List<Message> messages = api.getMessages();
@@ -54,12 +53,16 @@ public class MyClass {
 
 # Configuration
 
+Configuration is done by 
+
 Feign is configurable by endpoint, and in its basic form is:
 
-```ini
+{{% config p="feign" %}}
+```yaml
 feign:
     endpoints:
         com.mycompany.myapp.Api: http://base.url.to.api:port
+
 ```
 
 `com.mycompany.myapp.Api` is the fully qualified name of your api interface, and you can add as many as you want.
@@ -81,12 +84,12 @@ feign:
 ```
 The values in this example are the default values, except for `baseUrl` and `fallback` that don't have default values.
 
-`baseUrl` is this only mandatory option.
-`encoder` and `decoder` let you configure how your data is transformed when sent and received, respectively.
-`logger` let you choose which logger to use to log the requests.
-`logLevel` is an enum (`NONE`, `BASIC`, `HEADERS`, `FULL`).
-`hystrixWrapper` is an enum (`AUTO`, `ENABLED`, `DISABLED`). Feign comes with Hystrix circuit-breaker support. `DISABLED` disables this functionality. `ENABLED` tells Feign to wrap all requests in Hystrix mechanism, but the lib Hystrix must be in the classpath of your project. `AUTO` mode will scan the classpath and if Hystrix is present, will wrap requests with it.
-`fallback` takes a fully qualified class name and is only relevant when Hystrix is used. The fallback class must implement your API interface and will be used to return default values in case the requests are in error.
+* `baseUrl` is this only mandatory option.
+* `encoder` and `decoder` let you configure how your data is transformed when sent and received, respectively.
+* `logger` let you choose which logger to use to log the requests.
+* `logLevel` is an enum (`NONE`, `BASIC`, `HEADERS`, `FULL`).
+* `hystrixWrapper` is an enum (`AUTO`, `ENABLED`, `DISABLED`). Feign comes with Hystrix circuit-breaker support. `DISABLED` disables this functionality. `ENABLED` tells Feign to wrap all requests in Hystrix mechanism, but the lib Hystrix must be in the classpath of your project. `AUTO` mode will scan the classpath and if Hystrix is present, will wrap requests with it.
+* `fallback` takes a fully qualified class name and is only relevant when Hystrix is used. The fallback class must implement your API interface and will be used to return default values in case the requests are in error.
 
 Fallback example:
 ```java
@@ -100,7 +103,7 @@ public class Fallback implements Api {
      Message getMessage(@Param("id") int id) {
         // return your default value here
      }
-]
+}
 ```
 
 {{% callout info %}}
