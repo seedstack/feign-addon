@@ -2,6 +2,7 @@
 title: "Feign"
 repo: "https://github.com/seedstack/feign-addon"
 description: Official integration of OpenFeign, the easy-to-use HTTP client.
+author: "Adrien DOMURADO"
 tags:
     - API
     - REST
