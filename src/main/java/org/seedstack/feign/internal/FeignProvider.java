@@ -7,6 +7,7 @@
  */
 package org.seedstack.feign.internal;
 
+import feign.Contract;
 import feign.Feign;
 import feign.Logger;
 import feign.codec.Decoder;
@@ -22,7 +23,10 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 
 class FeignProvider implements Provider<Object> {
-    private static final Optional<Class<Object>> HYSTRIX_OPTIONAL = Classes.optional("com.netflix.hystrix.Hystrix");
+
+    private static final String FAILURE_CLASS_TEXT = "class";
+    private static final Optional<Class<Object>> HYSTRIX_OPTIONAL = Classes
+            .optional("com.netflix.hystrix.Hystrix");
     @Configuration
     private FeignConfig config;
     private Class<?> feignApi;
@@ -37,12 +41,18 @@ class FeignProvider implements Provider<Object> {
         Feign.Builder builder = createBuilder(endpointConfig);
         builder.encoder(instantiateEncoder(endpointConfig.getEncoder()));
         builder.decoder(instantiateDecoder(endpointConfig.getDecoder()));
+
+        if (endpointConfig.getContract() != null) {
+            builder.contract(instantiateContract(endpointConfig.getContract()));
+        }
+
         builder.logger(instantiateLogger(endpointConfig.getLogger()));
         builder.logLevel(endpointConfig.getLogLevel());
 
         if (endpointConfig.getFallback() != null) {
             if (builder instanceof HystrixFeign.Builder) {
-                return buildHystrixClient(endpointConfig, builder, instantiateFallback(endpointConfig.getFallback()));
+                return buildHystrixClient(endpointConfig, builder,
+                        instantiateFallback(endpointConfig.getFallback()));
             } else {
                 throw SeedException.createNew(FeignErrorCode.HYSTRIX_NOT_PRESENT)
                         .put("endpoint", feignApi.getName());
@@ -54,24 +64,32 @@ class FeignProvider implements Provider<Object> {
 
     private Feign.Builder createBuilder(FeignConfig.EndpointConfig endpointConfig) {
         switch (endpointConfig.getHystrixWrapper()) {
-            case AUTO:
-                return HYSTRIX_OPTIONAL.map(dummy -> (Feign.Builder) HystrixFeign.builder()).orElse(Feign.builder());
-            case ENABLED:
-                return HYSTRIX_OPTIONAL.map(dummy -> (Feign.Builder) HystrixFeign.builder()).orElseThrow(() -> (SeedException) SeedException.createNew(FeignErrorCode.HYSTRIX_NOT_PRESENT).put("endpoint", feignApi.getName()));
-            case DISABLED:
-                return Feign.builder();
-            default:
-                throw new IllegalArgumentException("Unsupported Hystrix mode " + endpointConfig.getHystrixWrapper());
+        case AUTO:
+            return HYSTRIX_OPTIONAL.map(dummy -> (Feign.Builder) HystrixFeign.builder())
+                    .orElse(Feign.builder());
+        case ENABLED:
+            return HYSTRIX_OPTIONAL.map(dummy -> (Feign.Builder) HystrixFeign.builder())
+                    .orElseThrow(() -> (SeedException) SeedException
+                            .createNew(FeignErrorCode.HYSTRIX_NOT_PRESENT)
+                            .put("endpoint", feignApi.getName()));
+        case DISABLED:
+            return Feign.builder();
+        default:
+            throw new IllegalArgumentException(
+                    "Unsupported Hystrix mode " + endpointConfig.getHystrixWrapper());
         }
     }
 
-    private Object buildHystrixClient(FeignConfig.EndpointConfig endpointConfig, Feign.Builder builder, Object fallback) {
+    private Object buildHystrixClient(FeignConfig.EndpointConfig endpointConfig,
+            Feign.Builder builder, Object fallback) {
         try {
-            Method target = HystrixFeign.Builder.class.getMethod("target", Class.class, String.class, Object.class);
-            return target.invoke(builder, feignApi, endpointConfig.getBaseUrl().toExternalForm(), fallback);
+            Method target = HystrixFeign.Builder.class.getMethod("target", Class.class,
+                    String.class, Object.class);
+            return target.invoke(builder, feignApi, endpointConfig.getBaseUrl().toExternalForm(),
+                    fallback);
         } catch (Exception e) {
             throw SeedException.wrap(e, FeignErrorCode.ERROR_BUILDING_HYSTRIX_CLIENT)
-                    .put("class", fallback);
+                    .put(FAILURE_CLASS_TEXT, fallback);
         }
     }
 
@@ -80,7 +98,16 @@ class FeignProvider implements Provider<Object> {
             return fallback.newInstance();
         } catch (Exception e) {
             throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_FALLBACK)
-                    .put("class", fallback);
+                    .put(FAILURE_CLASS_TEXT, fallback);
+        }
+    }
+
+    private Contract instantiateContract(Class<? extends Contract> contractClass) {
+        try {
+            return contractClass.newInstance();
+        } catch (Exception e) {
+            throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_CONTRACT)
+                    .put(FAILURE_CLASS_TEXT, contractClass);
         }
     }
 
@@ -89,7 +116,7 @@ class FeignProvider implements Provider<Object> {
             return encoderClass.newInstance();
         } catch (Exception e) {
             throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_ENCODER)
-                    .put("class", encoderClass);
+                    .put(FAILURE_CLASS_TEXT, encoderClass);
         }
     }
 
@@ -98,7 +125,7 @@ class FeignProvider implements Provider<Object> {
             return decoderClass.newInstance();
         } catch (Exception e) {
             throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_DECODER)
-                    .put("class", decoderClass);
+                    .put(FAILURE_CLASS_TEXT, decoderClass);
         }
     }
 
@@ -107,7 +134,7 @@ class FeignProvider implements Provider<Object> {
             return loggerClass.newInstance();
         } catch (Exception e) {
             throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_LOGGER)
-                    .put("class", loggerClass);
+                    .put(FAILURE_CLASS_TEXT, loggerClass);
         }
     }
 }

@@ -33,6 +33,7 @@ public class FeignPlugin extends AbstractSeedPlugin {
                 .build();
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     protected InitState initialize(InitContext initContext) {
         Map<Specification, Collection<Class<?>>> scannedClasses = initContext.scannedTypesBySpecification();

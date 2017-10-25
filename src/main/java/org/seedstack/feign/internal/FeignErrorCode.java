@@ -11,6 +11,7 @@ import org.seedstack.shed.exception.ErrorCode;
 
 enum FeignErrorCode implements ErrorCode {
     ERROR_BUILDING_HYSTRIX_CLIENT,
+    ERROR_INSTANTIATING_CONTRACT,
     ERROR_INSTANTIATING_DECODER,
     ERROR_INSTANTIATING_ENCODER,
     ERROR_INSTANTIATING_FALLBACK,

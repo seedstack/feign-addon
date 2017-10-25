@@ -7,6 +7,7 @@
  */
 package org.seedstack.feign;
 
+import feign.Contract;
 import feign.Logger;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
@@ -39,6 +40,8 @@ public class FeignConfig {
         @NotNull
         private URL baseUrl;
 
+        private Class<? extends Contract> contract;
+        
         private Class<? extends Encoder> encoder = JacksonEncoder.class;
 
         private Class<? extends Decoder> decoder = JacksonDecoder.class;
@@ -68,7 +71,16 @@ public class FeignConfig {
             this.encoder = encoder;
             return this;
         }
-
+        
+        public Class<? extends Contract> getContract() {
+            return contract;
+        }
+        
+        public EndpointConfig setContract(Class<? extends Contract> contract) {
+            this.contract = contract;
+            return this;
+        }
+        
         public Class<? extends Decoder> getDecoder() {
             return decoder;
         }

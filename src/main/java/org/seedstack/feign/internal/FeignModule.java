@@ -19,7 +19,7 @@ class FeignModule extends AbstractModule {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected void configure() {
         for (Class<?> feignApi : feignApis) {
             bind(feignApi).toProvider((javax.inject.Provider) new FeignProvider(feignApi));
