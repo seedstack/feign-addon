@@ -12,6 +12,7 @@ package org.seedstack.feign.fixtures;
 
 import javax.inject.Inject;
 
+import org.seedstack.coffig.Coffig;
 import org.seedstack.feign.fixtures.apis.TargetableAPI;
 import org.seedstack.seed.Application;
 
@@ -20,16 +21,24 @@ import feign.Target.HardCodedTarget;
 public class TestTarget extends HardCodedTarget<TargetableAPI> {
 
     @Inject
-    private Application application;
-
-    public TestTarget() {
+    public TestTarget(Application application) {
         super(TargetableAPI.class, "http://localhost:9090/feign/target/");
 
-        System.err.println(application);
+        Coffig coffig = application.getConfiguration();
 
-        /*System.err
-                .println(application.getConfiguration().get(String.class, "sys.tomcat.http.port"));*/
+        System.err.println("port" + application.getConfiguration(TestTarget.class).get("port"));
 
+        System.err.println(coffig.get(String.class, "test.port"));
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "TestTarget []" + super.toString();
     }
 
 }

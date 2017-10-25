@@ -38,6 +38,10 @@ class FeignProvider implements Provider<Object> {
     private FeignConfig config;
     private Class<?> feignApi;
 
+    @Inject
+    @SuppressWarnings("rawtypes")
+    private Set<Target> targets;
+
     FeignProvider(Class<?> feignApi) {
         this.feignApi = feignApi;
     }
@@ -136,6 +140,20 @@ class FeignProvider implements Provider<Object> {
         }
     }
 
+    @SuppressWarnings("rawtypes")
+    private Target<?> getInjectedTarget(Class<? extends Target> targetClass) {
+        Optional<Target> target = this.targets.stream()
+                .filter(x -> x.getClass().equals(targetClass))
+                .findFirst();
+
+        if (!target.isPresent()) {
+            throw SeedException
+                    .createNew(FeignErrorCode.ERROR_INSTANTIATING_TARGET_BAD_TARGET_CLASS)
+                    .put(FAILURE_CLASS_TEXT, targetClass);
+        }
+        return target.get();
+    }
+
     @SuppressWarnings({ "rawtypes" })
     private Target instantiateTarget(EndpointConfig endpointConfig) {
         Class<? extends Target> targetClass = endpointConfig.getTarget();
@@ -145,8 +163,7 @@ class FeignProvider implements Provider<Object> {
             target = new HardCodedTarget<>(feignApi, endpointConfig.getBaseUrl().toExternalForm());
         } else {
             try {
-
-                target = targetClass.newInstance();
+                target = getInjectedTarget(targetClass);
             } catch (Exception e) {
                 throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_TARGET)
                         .put(FAILURE_CLASS_TEXT, targetClass);

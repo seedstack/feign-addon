@@ -41,13 +41,6 @@ class FeignModule extends AbstractModule {
             targetMultibinder.addBinding().to((Class<? extends Target>) targetClass);
         }
 
-        //TODO: find out what's going on here. 
-        //Somehow the multibinder is not working as expected.
-        FeignTargetContainer container = new FeignTargetContainer();
-        requestInjection(container);
-
-        container.tryInjetion();
-
         for (Class<?> feignApi : feignApis) {
             bind(feignApi).toProvider((javax.inject.Provider) new FeignProvider(feignApi));
         }
