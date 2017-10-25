@@ -14,7 +14,12 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.Test;
 import org.seedstack.feign.fixtures.Message;
-import org.seedstack.feign.fixtures.TestAPI;
+import org.seedstack.feign.fixtures.TestContract;
+import org.seedstack.feign.fixtures.apis.HystrixDisabledAPI;
+import org.seedstack.feign.fixtures.apis.HystrixEnabledAPI;
+import org.seedstack.feign.fixtures.apis.TargetableAPI;
+import org.seedstack.feign.fixtures.apis.TestAPI;
+import org.seedstack.feign.fixtures.apis.TestContractAPI;
 import org.seedstack.seed.it.AbstractSeedWebIT;
 
 import javax.inject.Inject;
@@ -29,6 +34,18 @@ public class FeignIT extends AbstractSeedWebIT {
     @Inject
     private TestAPI testAPI;
 
+    @Inject
+    private TestContractAPI contractAPI;
+
+    @Inject
+    private HystrixEnabledAPI hystrixEnabledAPI;
+
+    @Inject
+    private HystrixDisabledAPI hystrixDisabledAPI;
+
+    @Inject
+    private TargetableAPI targetableAPI;
+    
     @Deployment
     public static WebArchive createDeployment() {
         return ShrinkWrap.create(WebArchive.class, "feign.war");
@@ -38,6 +55,30 @@ public class FeignIT extends AbstractSeedWebIT {
     @RunAsClient
     public void feignClientIsInjectable() throws Exception {
         assertThat(testAPI).isNotNull();
+    }
+
+    @Test
+    @RunAsClient
+    public void feignContractClientIsInjectable() throws Exception {
+        assertThat(contractAPI).isNotNull();
+    }
+
+    @Test
+    @RunAsClient
+    public void feignHystrixEnabledClientIsInjectable() throws Exception {
+        assertThat(hystrixEnabledAPI).isNotNull();
+    }
+
+    @Test
+    @RunAsClient
+    public void feignHystrixDisabledClientIsInjectable() throws Exception {
+        assertThat(hystrixDisabledAPI).isNotNull();
+    }
+    
+    @Test
+    @RunAsClient
+    public void feignTargetableClientIsInjectable() throws Exception {
+        assertThat(targetableAPI).isNotNull();
     }
 
     @Test
@@ -55,4 +96,38 @@ public class FeignIT extends AbstractSeedWebIT {
         assertThat(message.getBody()).isEqualTo("Error code: 404 !");
         assertThat(message.getAuthor()).isEqualTo("fallback");
     }
+
+    @Test
+    @RunAsClient
+    public void testContractNominalCall() {
+        Message message = contractAPI.getMessage();
+        assertThat(message.getBody()).isEqualTo("Hello World !");
+        assertThat(message.getAuthor()).isEqualTo("computer");
+        assertThat(TestContract.hasBeenUsed()).isTrue();
+    }
+
+    @Test
+    @RunAsClient
+    public void testHystrixEnabledNominalCall() {
+        Message message = hystrixEnabledAPI.getMessage();
+        assertThat(message.getBody()).isEqualTo("Hello World !");
+        assertThat(message.getAuthor()).isEqualTo("computer");
+    }
+
+    @Test
+    @RunAsClient
+    public void testHystrixDisabledNominalCall() {
+        Message message = hystrixDisabledAPI.getMessage();
+        assertThat(message.getBody()).isEqualTo("Hello World !");
+        assertThat(message.getAuthor()).isEqualTo("computer");
+    }
+    
+    @Test
+    @RunAsClient
+    public void testTargetableNominalCall() {
+        Message message = targetableAPI.getMessage();
+        assertThat(message.getBody()).isEqualTo("I was routed trough a custom target");
+        assertThat(message.getAuthor()).isEqualTo("or i thought so");
+    }
+
 }

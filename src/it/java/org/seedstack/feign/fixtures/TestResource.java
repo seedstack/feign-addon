@@ -12,12 +12,20 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Path("/message")
+@Path("/")
 public class TestResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @Path("/message")
     public Message say() {
         return new Message("Hello World !", "computer");
+    }
+    
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/target/message")
+    public Message targetSay() {
+        return new Message("I was routed trough a custom target","or i thought so");
     }
 }

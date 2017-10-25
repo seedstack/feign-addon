@@ -7,20 +7,27 @@
  */
 package org.seedstack.feign.internal;
 
-import feign.Contract;
-import feign.Feign;
-import feign.Logger;
-import feign.codec.Decoder;
-import feign.codec.Encoder;
-import feign.hystrix.HystrixFeign;
+import java.lang.reflect.Method;
+import java.util.Optional;
+import java.util.Set;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import org.seedstack.feign.FeignConfig;
+import org.seedstack.feign.FeignConfig.EndpointConfig;
 import org.seedstack.seed.Configuration;
 import org.seedstack.seed.SeedException;
 import org.seedstack.shed.reflect.Classes;
 
-import javax.inject.Provider;
-import java.lang.reflect.Method;
-import java.util.Optional;
+import feign.Contract;
+import feign.Feign;
+import feign.Logger;
+import feign.Target;
+import feign.Target.HardCodedTarget;
+import feign.codec.Decoder;
+import feign.codec.Encoder;
+import feign.hystrix.HystrixFeign;
 
 class FeignProvider implements Provider<Object> {
 
@@ -35,6 +42,7 @@ class FeignProvider implements Provider<Object> {
         this.feignApi = feignApi;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Object get() {
         FeignConfig.EndpointConfig endpointConfig = config.getEndpoints().get(feignApi);
@@ -58,7 +66,7 @@ class FeignProvider implements Provider<Object> {
                         .put("endpoint", feignApi.getName());
             }
         } else {
-            return builder.target(feignApi, endpointConfig.getBaseUrl().toExternalForm());
+            return builder.target(instantiateTarget(endpointConfig));
         }
     }
 
@@ -83,10 +91,9 @@ class FeignProvider implements Provider<Object> {
     private Object buildHystrixClient(FeignConfig.EndpointConfig endpointConfig,
             Feign.Builder builder, Object fallback) {
         try {
-            Method target = HystrixFeign.Builder.class.getMethod("target", Class.class,
-                    String.class, Object.class);
-            return target.invoke(builder, feignApi, endpointConfig.getBaseUrl().toExternalForm(),
-                    fallback);
+            Method target = HystrixFeign.Builder.class.getMethod("target", Target.class,
+                    Object.class);
+            return target.invoke(builder, instantiateTarget(endpointConfig), fallback);
         } catch (Exception e) {
             throw SeedException.wrap(e, FeignErrorCode.ERROR_BUILDING_HYSTRIX_CLIENT)
                     .put(FAILURE_CLASS_TEXT, fallback);
@@ -127,6 +134,30 @@ class FeignProvider implements Provider<Object> {
             throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_DECODER)
                     .put(FAILURE_CLASS_TEXT, decoderClass);
         }
+    }
+
+    @SuppressWarnings({ "rawtypes" })
+    private Target instantiateTarget(EndpointConfig endpointConfig) {
+        Class<? extends Target> targetClass = endpointConfig.getTarget();
+        Target<?> target;
+
+        if (targetClass.equals(HardCodedTarget.class)) {
+            target = new HardCodedTarget<>(feignApi, endpointConfig.getBaseUrl().toExternalForm());
+        } else {
+            try {
+
+                target = targetClass.newInstance();
+            } catch (Exception e) {
+                throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_TARGET)
+                        .put(FAILURE_CLASS_TEXT, targetClass);
+            }
+        }
+        if (!target.type().isAssignableFrom(feignApi)) {
+            throw SeedException
+                    .createNew(FeignErrorCode.ERROR_INSTANTIATING_TARGET_BAD_TARGET_CLASS)
+                    .put(FAILURE_CLASS_TEXT, targetClass);
+        }
+        return target;
     }
 
     private Logger instantiateLogger(Class<? extends Logger> loggerClass) {
