@@ -12,7 +12,6 @@ package org.seedstack.feign.fixtures;
 
 import javax.inject.Inject;
 
-import org.seedstack.coffig.Coffig;
 import org.seedstack.feign.fixtures.apis.TargetableAPI;
 import org.seedstack.seed.Application;
 
@@ -22,20 +21,11 @@ public class TestTarget extends HardCodedTarget<TargetableAPI> {
 
     @Inject
     public TestTarget(Application application) {
-        super(TargetableAPI.class, "http://localhost:9090/feign/target/");
-
-        Coffig coffig = application.getConfiguration();
-
-        System.err.println("port" + application.getConfiguration(TestTarget.class).get("port"));
-
-        System.err.println(coffig.get(String.class, "test.port"));
+        super(TargetableAPI.class, String.format("http://localhost:%s/feign/target/",
+                application.getConfiguration().getMandatory(String.class,
+                        "integrationTest.reservedPort")));
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
-     */
     @Override
     public String toString() {
         return "TestTarget []" + super.toString();

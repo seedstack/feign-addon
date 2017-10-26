@@ -6,10 +6,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-classes:
-  org:
-    test: 9090
-    port: ${test}
+integrationTest:
+  reservedPort: ${sys.tomcat\.http\.port:'9090'}
 
 feign:
   endpoints:
