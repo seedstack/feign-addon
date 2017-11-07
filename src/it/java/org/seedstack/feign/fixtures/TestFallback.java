@@ -7,6 +7,8 @@
  */
 package org.seedstack.feign.fixtures;
 
+import org.seedstack.feign.fixtures.apis.TestAPI;
+
 public class TestFallback implements TestAPI {
     @Override
     public Message getMessage() {

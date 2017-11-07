@@ -7,20 +7,25 @@
  */
 package org.seedstack.feign;
 
+import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.validation.constraints.NotNull;
+
+import org.seedstack.coffig.Config;
+import org.seedstack.coffig.SingleValue;
+
+import feign.Contract;
 import feign.Logger;
+import feign.Target;
+import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
-import org.seedstack.coffig.Config;
-import org.seedstack.coffig.SingleValue;
-
-import javax.validation.constraints.NotNull;
-import java.net.URL;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 @Config("feign")
 public class FeignConfig {
@@ -34,10 +39,15 @@ public class FeignConfig {
         endpoints.put(endpointClass, endpoint);
     }
 
+    @SuppressWarnings("rawtypes")
     public static class EndpointConfig {
         @SingleValue
         @NotNull
         private URL baseUrl;
+
+        private Class<? extends Contract> contract;
+
+        private Class<? extends Target> target = HardCodedTarget.class;
 
         private Class<? extends Encoder> encoder = JacksonEncoder.class;
 
@@ -69,8 +79,26 @@ public class FeignConfig {
             return this;
         }
 
+        public Class<? extends Contract> getContract() {
+            return contract;
+        }
+
+        public EndpointConfig setContract(Class<? extends Contract> contract) {
+            this.contract = contract;
+            return this;
+        }
+
         public Class<? extends Decoder> getDecoder() {
             return decoder;
+        }
+
+        public Class<? extends Target> getTarget() {
+            return target;
+        }
+        
+        public EndpointConfig setTarget(Class<? extends Target> target) {
+            this.target = target;
+            return this;
         }
 
         public EndpointConfig setDecoder(Class<? extends Decoder> decoder) {
@@ -116,8 +144,6 @@ public class FeignConfig {
     }
 
     public enum HystrixWrapperMode {
-        AUTO,
-        ENABLED,
-        DISABLED,
+        AUTO, ENABLED, DISABLED,
     }
 }
