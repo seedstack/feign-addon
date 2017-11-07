@@ -25,7 +25,7 @@
         <seed.version>3.2.0</seed.version>
         <feign.version>9.3.1</feign.version>
 
-        <compatibility.skip>1.0.0</compatibility.skip>
+        <compatibility.version>1.0.0</compatibility.version>
 
         <bintray.package>feign-addon</bintray.package>
     </properties>
