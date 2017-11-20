@@ -5,43 +5,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+
 package org.seedstack.feign.internal;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
-
-import feign.Target;
+import java.util.Collection;
 
 class FeignModule extends AbstractModule {
-    private final Collection<Class<?>> feignApis;
-    private final List<Class<? extends Target<?>>> feignTargets = new ArrayList<>();
+    private final Collection<Class<?>> feignInterfaces;
+    private final Collection<Class<?>> bindings;
 
-    FeignModule(Collection<Class<?>> feignApis, Collection<Class<?>> targetClasses) {
-        this.feignApis = feignApis;
-        resolveFeignTargets(targetClasses);
-
-    }
-
-    @SuppressWarnings("unchecked")
-    private void resolveFeignTargets(Collection<Class<?>> targetClasses) {
-        targetClasses.stream()
-                .map(x -> (Class<? extends Target<?>>) x)
-                .forEach(feignTargets::add);
+    FeignModule(Collection<Class<?>> feignInterfaces, Collection<Class<?>> bindings) {
+        this.feignInterfaces = feignInterfaces;
+        this.bindings = bindings;
     }
 
     @Override
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings("unchecked")
     protected void configure() {
-        Multibinder<Target> targetMultibinder = Multibinder.newSetBinder(binder(), Target.class);
-        for (Class<? extends Target> targetClass : feignTargets) {
-            targetMultibinder.addBinding().to((Class<? extends Target>) targetClass);
+        for (Class<?> binding : bindings) {
+            bind(binding);
         }
 
-        for (Class<?> feignApi : feignApis) {
+        for (Class<?> feignApi : feignInterfaces) {
             bind(feignApi).toProvider((javax.inject.Provider) new FeignProvider(feignApi));
         }
     }

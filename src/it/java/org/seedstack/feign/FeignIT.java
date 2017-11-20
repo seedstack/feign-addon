@@ -5,8 +5,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+
 package org.seedstack.feign;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.net.URL;
+import javax.inject.Inject;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.test.api.ArquillianResource;
@@ -20,19 +25,23 @@ import org.seedstack.feign.fixtures.apis.HystrixEnabledAPI;
 import org.seedstack.feign.fixtures.apis.TargetableAPI;
 import org.seedstack.feign.fixtures.apis.TestAPI;
 import org.seedstack.feign.fixtures.apis.TestContractAPI;
+import org.seedstack.feign.fixtures.apis.TimeoutAPI;
+import org.seedstack.seed.Logging;
 import org.seedstack.seed.it.AbstractSeedWebIT;
-
-import javax.inject.Inject;
-import java.net.URL;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.slf4j.Logger;
 
 public class FeignIT extends AbstractSeedWebIT {
+    @Logging
+    private Logger logger;
+
     @ArquillianResource
     private URL baseUrl;
 
     @Inject
     private TestAPI testAPI;
+
+    @Inject
+    private TimeoutAPI timeoutAPI;
 
     @Inject
     private TestContractAPI contractAPI;
@@ -45,7 +54,7 @@ public class FeignIT extends AbstractSeedWebIT {
 
     @Inject
     private TargetableAPI targetableAPI;
-    
+
     @Deployment
     public static WebArchive createDeployment() {
         return ShrinkWrap.create(WebArchive.class, "feign.war");
@@ -74,7 +83,7 @@ public class FeignIT extends AbstractSeedWebIT {
     public void feignHystrixDisabledClientIsInjectable() throws Exception {
         assertThat(hystrixDisabledAPI).isNotNull();
     }
-    
+
     @Test
     @RunAsClient
     public void feignTargetableClientIsInjectable() throws Exception {
@@ -94,6 +103,16 @@ public class FeignIT extends AbstractSeedWebIT {
     public void testFallback() {
         Message message = testAPI.get404();
         assertThat(message.getBody()).isEqualTo("Error code: 404 !");
+        assertThat(message.getAuthor()).isEqualTo("fallback");
+    }
+
+    @Test
+    @RunAsClient
+    public void testTimeout() {
+        logger.info("Issuing request");
+        Message message = timeoutAPI.getMessage();
+        logger.info("After timeout");
+        assertThat(message.getBody()).isEqualTo("Fallback response after timeout");
         assertThat(message.getAuthor()).isEqualTo("fallback");
     }
 
@@ -121,7 +140,7 @@ public class FeignIT extends AbstractSeedWebIT {
         assertThat(message.getBody()).isEqualTo("Hello World !");
         assertThat(message.getAuthor()).isEqualTo("computer");
     }
-    
+
     @Test
     @RunAsClient
     public void testTargetableNominalCall() {

@@ -7,9 +7,10 @@
  */
 package org.seedstack.feign.fixtures;
 
+import org.seedstack.feign.fixtures.apis.HystrixEnabledAPI;
 import org.seedstack.feign.fixtures.apis.TestAPI;
 
-public class TestFallback implements TestAPI {
+public class TestFallback implements TestAPI, HystrixEnabledAPI {
     @Override
     public Message getMessage() {
         return new Message("Fallback response", "fallback");

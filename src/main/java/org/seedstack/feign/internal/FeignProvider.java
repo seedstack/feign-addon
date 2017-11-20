@@ -5,44 +5,38 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+
 package org.seedstack.feign.internal;
 
-import java.lang.reflect.Method;
-import java.util.Optional;
-import java.util.Set;
-
+import com.google.inject.Injector;
+import feign.Contract;
+import feign.Feign;
+import feign.Logger;
+import feign.Request;
+import feign.Target;
+import feign.Target.HardCodedTarget;
+import feign.codec.Decoder;
+import feign.codec.Encoder;
+import feign.hystrix.FallbackFactory;
+import feign.hystrix.HystrixFeign;
+import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Provider;
-
 import org.seedstack.feign.FeignConfig;
 import org.seedstack.feign.FeignConfig.EndpointConfig;
 import org.seedstack.seed.Configuration;
 import org.seedstack.seed.SeedException;
 import org.seedstack.shed.reflect.Classes;
 
-import feign.Contract;
-import feign.Feign;
-import feign.Logger;
-import feign.Target;
-import feign.Target.HardCodedTarget;
-import feign.codec.Decoder;
-import feign.codec.Encoder;
-import feign.hystrix.HystrixFeign;
-
-class FeignProvider implements Provider<Object> {
-
-    private static final String FAILURE_CLASS_TEXT = "class";
-    private static final Optional<Class<Object>> HYSTRIX_OPTIONAL = Classes
-            .optional("com.netflix.hystrix.Hystrix");
+class FeignProvider<T> implements Provider<Object> {
+    private static final boolean HYSTRIX_PRESENT = Classes.optional("com.netflix.hystrix.Hystrix").isPresent();
+    private final Class<T> feignApi;
     @Configuration
     private FeignConfig config;
-    private Class<?> feignApi;
-
     @Inject
-    @SuppressWarnings("rawtypes")
-    private Set<Target> targets;
+    private Injector injector;
 
-    FeignProvider(Class<?> feignApi) {
+    FeignProvider(Class<T> feignApi) {
         this.feignApi = feignApi;
     }
 
@@ -53,18 +47,31 @@ class FeignProvider implements Provider<Object> {
         Feign.Builder builder = createBuilder(endpointConfig);
         builder.encoder(instantiateEncoder(endpointConfig.getEncoder()));
         builder.decoder(instantiateDecoder(endpointConfig.getDecoder()));
-
         if (endpointConfig.getContract() != null) {
             builder.contract(instantiateContract(endpointConfig.getContract()));
         }
-
         builder.logger(instantiateLogger(endpointConfig.getLogger()));
         builder.logLevel(endpointConfig.getLogLevel());
+        TimeUnit timeUnit = endpointConfig.getTimeUnit();
+        builder.options(new Request.Options(
+                (int) timeUnit.toMillis(endpointConfig.getConnectTimeout()),
+                (int) timeUnit.toMillis(endpointConfig.getReadTimeout()))
+        );
 
-        if (endpointConfig.getFallback() != null) {
+        Class<T> fallback = endpointConfig.getFallback();
+        if (fallback != null) {
             if (builder instanceof HystrixFeign.Builder) {
-                return buildHystrixClient(endpointConfig, builder,
-                        instantiateFallback(endpointConfig.getFallback()));
+                if (FallbackFactory.class.isAssignableFrom(fallback)) {
+                    return ((HystrixFeign.Builder) builder).target(
+                            instantiateTarget(endpointConfig),
+                            (FallbackFactory<T>) instantiateFallback(fallback)
+                    );
+                } else {
+                    return ((HystrixFeign.Builder) builder).target(
+                            instantiateTarget(endpointConfig),
+                            (T) instantiateFallback(fallback)
+                    );
+                }
             } else {
                 throw SeedException.createNew(FeignErrorCode.HYSTRIX_NOT_PRESENT)
                         .put("endpoint", feignApi.getName());
@@ -76,113 +83,83 @@ class FeignProvider implements Provider<Object> {
 
     private Feign.Builder createBuilder(FeignConfig.EndpointConfig endpointConfig) {
         switch (endpointConfig.getHystrixWrapper()) {
-        case AUTO:
-            return HYSTRIX_OPTIONAL.map(dummy -> (Feign.Builder) HystrixFeign.builder())
-                    .orElse(Feign.builder());
-        case ENABLED:
-            return HYSTRIX_OPTIONAL.map(dummy -> (Feign.Builder) HystrixFeign.builder())
-                    .orElseThrow(() -> (SeedException) SeedException
-                            .createNew(FeignErrorCode.HYSTRIX_NOT_PRESENT)
-                            .put("endpoint", feignApi.getName()));
-        case DISABLED:
-            return Feign.builder();
-        default:
-            throw new IllegalArgumentException(
-                    "Unsupported Hystrix mode " + endpointConfig.getHystrixWrapper());
-        }
-    }
-
-    private Object buildHystrixClient(FeignConfig.EndpointConfig endpointConfig,
-            Feign.Builder builder, Object fallback) {
-        try {
-            Method target = HystrixFeign.Builder.class.getMethod("target", Target.class,
-                    Object.class);
-            return target.invoke(builder, instantiateTarget(endpointConfig), fallback);
-        } catch (Exception e) {
-            throw SeedException.wrap(e, FeignErrorCode.ERROR_BUILDING_HYSTRIX_CLIENT)
-                    .put(FAILURE_CLASS_TEXT, fallback);
+            case AUTO:
+                if (HYSTRIX_PRESENT) {
+                    return HystrixFeign.builder();
+                } else {
+                    return Feign.builder();
+                }
+            case ENABLED:
+                if (HYSTRIX_PRESENT) {
+                    return HystrixFeign.builder();
+                } else {
+                    throw SeedException.createNew(FeignErrorCode.HYSTRIX_NOT_PRESENT)
+                            .put("endpoint", feignApi.getName());
+                }
+            case DISABLED:
+                return Feign.builder();
+            default:
+                throw new IllegalArgumentException("Unsupported Hystrix mode " + endpointConfig.getHystrixWrapper());
         }
     }
 
     private Object instantiateFallback(Class<?> fallback) {
         try {
-            return fallback.newInstance();
+            return injector.getInstance(fallback);
         } catch (Exception e) {
             throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_FALLBACK)
-                    .put(FAILURE_CLASS_TEXT, fallback);
+                    .put("class", fallback);
         }
     }
 
     private Contract instantiateContract(Class<? extends Contract> contractClass) {
         try {
-            return contractClass.newInstance();
+            return injector.getInstance(contractClass);
         } catch (Exception e) {
             throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_CONTRACT)
-                    .put(FAILURE_CLASS_TEXT, contractClass);
+                    .put("class", contractClass);
         }
     }
 
     private Encoder instantiateEncoder(Class<? extends Encoder> encoderClass) {
         try {
-            return encoderClass.newInstance();
+            return injector.getInstance(encoderClass);
         } catch (Exception e) {
             throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_ENCODER)
-                    .put(FAILURE_CLASS_TEXT, encoderClass);
+                    .put("class", encoderClass);
         }
     }
 
     private Decoder instantiateDecoder(Class<? extends Decoder> decoderClass) {
         try {
-            return decoderClass.newInstance();
+            return injector.getInstance(decoderClass);
         } catch (Exception e) {
             throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_DECODER)
-                    .put(FAILURE_CLASS_TEXT, decoderClass);
+                    .put("class", decoderClass);
         }
     }
 
-    @SuppressWarnings("rawtypes")
-    private Target<?> getInjectedTarget(Class<? extends Target> targetClass) {
-        Optional<Target> target = this.targets.stream()
-                .filter(x -> x.getClass().equals(targetClass))
-                .findFirst();
-
-        if (!target.isPresent()) {
-            throw SeedException
-                    .createNew(FeignErrorCode.ERROR_INSTANTIATING_TARGET_BAD_TARGET_CLASS)
-                    .put(FAILURE_CLASS_TEXT, targetClass);
-        }
-        return target.get();
-    }
-
-    @SuppressWarnings({ "rawtypes" })
-    private Target instantiateTarget(EndpointConfig endpointConfig) {
-        Class<? extends Target> targetClass = endpointConfig.getTarget();
-        Target<?> target;
-
-        if (targetClass.equals(HardCodedTarget.class)) {
-            target = new HardCodedTarget<>(feignApi, endpointConfig.getBaseUrl().toExternalForm());
+    @SuppressWarnings({"rawtypes"})
+    private Target<T> instantiateTarget(EndpointConfig endpointConfig) {
+        Class<? extends Target<T>> targetClass = endpointConfig.getTarget(feignApi);
+        if (HardCodedTarget.class.equals(targetClass)) {
+            return new HardCodedTarget<>(feignApi, endpointConfig.getBaseUrl().toExternalForm());
         } else {
             try {
-                target = getInjectedTarget(targetClass);
+                return injector.getInstance(targetClass);
             } catch (Exception e) {
                 throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_TARGET)
-                        .put(FAILURE_CLASS_TEXT, targetClass);
+                        .put("class", targetClass);
             }
         }
-        if (!target.type().isAssignableFrom(feignApi)) {
-            throw SeedException
-                    .createNew(FeignErrorCode.ERROR_INSTANTIATING_TARGET_BAD_TARGET_CLASS)
-                    .put(FAILURE_CLASS_TEXT, targetClass);
-        }
-        return target;
     }
 
     private Logger instantiateLogger(Class<? extends Logger> loggerClass) {
         try {
-            return loggerClass.newInstance();
+            return injector.getInstance(loggerClass);
         } catch (Exception e) {
             throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_LOGGER)
-                    .put(FAILURE_CLASS_TEXT, loggerClass);
+                    .put("class", loggerClass);
         }
     }
 }
