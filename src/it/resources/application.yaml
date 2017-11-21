@@ -32,6 +32,8 @@ feign:
       fallback: org.seedstack.feign.fixtures.TimeoutFallbackFactory
       logger: feign.slf4j.Slf4jLogger
       hystrixWrapper: AUTO
+      connectTimeout: 5000
+      readTimeout: 2000
     org.seedstack.feign.fixtures.apis.TestContractAPI:
       baseUrl: http://localhost:${sys.tomcat\.http\.port:'9090'}/feign
       contract: org.seedstack.feign.fixtures.TestContract
