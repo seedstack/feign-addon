@@ -1,5 +1,6 @@
 ---
 title: "Feign"
+addon: "Feign"
 repo: "https://github.com/seedstack/feign-addon"
 description: Official integration of OpenFeign, the easy-to-use HTTP client.
 author: "Adrien DOMURADO"
@@ -9,9 +10,7 @@ tags:
     - micro-service
 zones:
     - Addons
-menu:
-    AddonFeign:
-        weight: 10
+noMenu: true    
 ---
 
 This component allows you to define an HTTP client with a simple Java interface that you can then inject and use transparently
@@ -23,7 +22,7 @@ in your code.<!--more-->
 See the documentation on the page's project: [https://github.com/OpenFeign/feign](https://github.com/OpenFeign/feign)
 {{% /callout %}}
 
-# How to use
+## How to use
 
 First, you need to create an interface annotated by `@FeignApi`, with each method being an HTTP call. Annotate each method with `@RequestLine`:
 ```java
@@ -52,7 +51,7 @@ public class MyClass {
 }
 ```
 
-# Configuration
+## Configuration
 
 Configuration is done by 
 
