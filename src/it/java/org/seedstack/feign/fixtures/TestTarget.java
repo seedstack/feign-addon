@@ -6,16 +6,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 /**
- * 
+ *
  */
+
 package org.seedstack.feign.fixtures;
 
+import feign.Target.HardCodedTarget;
 import javax.inject.Inject;
-
 import org.seedstack.feign.fixtures.apis.TargetableAPI;
 import org.seedstack.seed.Application;
-
-import feign.Target.HardCodedTarget;
 
 public class TestTarget extends HardCodedTarget<TargetableAPI> {
 

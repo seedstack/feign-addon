@@ -5,17 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+
 package org.seedstack.feign.fixtures;
 
 import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import feign.Body;
 import feign.Contract;
@@ -25,6 +19,12 @@ import feign.MethodMetadata;
 import feign.Param;
 import feign.QueryMap;
 import feign.RequestLine;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class TestContract extends Contract.BaseContract {
 
@@ -33,8 +33,41 @@ public class TestContract extends Contract.BaseContract {
     public static boolean hasBeenUsed() {
         return used;
     }
+
     private static void use() {
         used = true;
+    }
+
+    private static <K, V> boolean searchMapValuesContainsSubstring(Map<K, Collection<String>> map,
+            String search) {
+        Collection<Collection<String>> values = map.values();
+        if (values == null) {
+            return false;
+        }
+
+        for (Collection<String> entry : values) {
+            for (String value : entry) {
+                if (value.indexOf(search) != -1) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static Map<String, Collection<String>> toMap(String[] input) {
+        Map<String, Collection<String>> result = new LinkedHashMap<String, Collection<String>>(
+                input.length);
+        for (String header : input) {
+            int colon = header.indexOf(':');
+            String name = header.substring(0, colon);
+            if (!result.containsKey(name)) {
+                result.put(name, new ArrayList<String>(1));
+            }
+            result.get(name).add(header.substring(colon + 2));
+        }
+        return result;
     }
 
     // Copycat of DefaultContract with test-flag
@@ -138,38 +171,6 @@ public class TestContract extends Contract.BaseContract {
             }
         }
         return isHttpAnnotation;
-    }
-
-    private static <K, V> boolean searchMapValuesContainsSubstring(Map<K, Collection<String>> map,
-            String search) {
-        Collection<Collection<String>> values = map.values();
-        if (values == null) {
-            return false;
-        }
-
-        for (Collection<String> entry : values) {
-            for (String value : entry) {
-                if (value.indexOf(search) != -1) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private static Map<String, Collection<String>> toMap(String[] input) {
-        Map<String, Collection<String>> result = new LinkedHashMap<String, Collection<String>>(
-                input.length);
-        for (String header : input) {
-            int colon = header.indexOf(':');
-            String name = header.substring(0, colon);
-            if (!result.containsKey(name)) {
-                result.put(name, new ArrayList<String>(1));
-            }
-            result.get(name).add(header.substring(colon + 2));
-        }
-        return result;
     }
 
 }

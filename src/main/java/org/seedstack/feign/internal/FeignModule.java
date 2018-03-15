@@ -9,7 +9,6 @@
 package org.seedstack.feign.internal;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
 import java.util.Collection;
 
 class FeignModule extends AbstractModule {

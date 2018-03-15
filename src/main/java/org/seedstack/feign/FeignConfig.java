@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+
 package org.seedstack.feign;
 
 import feign.Contract;
@@ -38,6 +39,10 @@ public class FeignConfig {
 
     public void addEndpoint(Class<?> endpointClass, EndpointConfig endpoint) {
         endpoints.put(endpointClass, endpoint);
+    }
+
+    public enum HystrixWrapperMode {
+        AUTO, ENABLED, DISABLED,
     }
 
     @SuppressWarnings("rawtypes")
@@ -97,6 +102,11 @@ public class FeignConfig {
             return decoder;
         }
 
+        public EndpointConfig setDecoder(Class<? extends Decoder> decoder) {
+            this.decoder = decoder;
+            return this;
+        }
+
         @SuppressWarnings("unchecked")
         public <T> Class<? extends Target<T>> getTarget(Class<T> apiClass) {
             if (target == null) {
@@ -115,11 +125,6 @@ public class FeignConfig {
 
         public EndpointConfig setTarget(Class<? extends Target> target) {
             this.target = target;
-            return this;
-        }
-
-        public EndpointConfig setDecoder(Class<? extends Decoder> decoder) {
-            this.decoder = decoder;
             return this;
         }
 
@@ -186,9 +191,5 @@ public class FeignConfig {
             this.readTimeout = readTimeout;
             return this;
         }
-    }
-
-    public enum HystrixWrapperMode {
-        AUTO, ENABLED, DISABLED,
     }
 }
