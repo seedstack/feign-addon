@@ -1,11 +1,10 @@
-/**
- * Copyright (c) 2013-2016, The SeedStack authors <http://seedstack.org>
+/*
+ * Copyright © 2013-2018, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.seedstack.feign;
 
 import feign.Contract;
@@ -17,7 +16,6 @@ import feign.codec.Encoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
-import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,7 +44,7 @@ public class FeignConfig {
     public static class EndpointConfig {
         @SingleValue
         @NotNull
-        private URL baseUrl;
+        private String baseUrl;
         private Class<? extends Contract> contract;
         @NotNull
         private Class<? extends Target> target = HardCodedTarget.class;
@@ -68,11 +66,11 @@ public class FeignConfig {
         private HystrixWrapperMode hystrixWrapper = HystrixWrapperMode.AUTO;
         private Class<?> fallback;
 
-        public URL getBaseUrl() {
+        public String getBaseUrl() {
             return baseUrl;
         }
 
-        public EndpointConfig setBaseUrl(URL baseUrl) {
+        public EndpointConfig setBaseUrl(String baseUrl) {
             this.baseUrl = baseUrl;
             return this;
         }

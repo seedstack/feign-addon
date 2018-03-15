@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013-2016, The SeedStack authors <http://seedstack.org>
+/*
+ * Copyright © 2013-2018, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,6 +9,7 @@
 package org.seedstack.feign.internal;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import java.util.Collection;
 
 class FeignModule extends AbstractModule {
@@ -28,7 +29,7 @@ class FeignModule extends AbstractModule {
         }
 
         for (Class<?> feignApi : feignInterfaces) {
-            bind(feignApi).toProvider((javax.inject.Provider) new FeignProvider(feignApi));
+            bind(feignApi).toProvider(new FeignProvider(feignApi));
         }
     }
 
