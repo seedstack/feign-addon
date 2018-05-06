@@ -18,6 +18,11 @@ public class TestFallback implements TestAPI, HystrixEnabledAPI {
     }
 
     @Override
+    public Message getProtectedMessage(String credentials) {
+        return new Message("Fallback protected response", "fallback");
+    }
+
+    @Override
     public Message get404() {
         return new Message("Error code: 404 !", "fallback");
     }

@@ -6,22 +6,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-#logging:
-#  loggers:
-#    org.seedstack.netflix.hystrix.internal.CoffigHystrixDynamicProperties: TRACE
-
-netflix:
-  hystrix:
-    properties:
-      command.default.execution.isolation.thread.timeoutInMilliseconds: 100
+logging:
+  loggers:
+    org.seedstack.seed.rest.internal.RestPlugin: DEBUG
+    feign.Logger: DEBUG
 
 feign:
   endpoints:
     org.seedstack.feign.fixtures.apis.TestAPI:
       baseUrl: ${web.runtime.baseUrl}feign
-      logLevel: BASIC
       fallback: org.seedstack.feign.fixtures.TestFallback
       logger: feign.slf4j.Slf4jLogger
+      logLevel: HEADERS
       hystrixWrapper: AUTO
     org.seedstack.feign.fixtures.apis.TimeoutAPI:
       baseUrl: ${web.runtime.baseUrl}feign
@@ -49,4 +45,12 @@ feign:
       logLevel: BASIC
       target: org.seedstack.feign.fixtures.TestTarget
       hystrixWrapper: DISABLED
-      
+
+security:
+  users:
+    test: test
+  web:
+    urls:
+      -
+        pattern: /feign/protected-message
+        filters: [ authcBasic ]

@@ -88,6 +88,20 @@ public class FeignIT {
     }
 
     @Test
+    public void testProtectedCall() {
+        Message message = testAPI.getProtectedMessage("dGVzdDp0ZXN0");
+        assertThat(message.getBody()).isEqualTo("Hello World !");
+        assertThat(message.getAuthor()).isEqualTo("computer");
+    }
+
+    @Test
+    public void testProtectedCallInvalidAuthz() {
+        Message message = testAPI.getProtectedMessage("xxx");
+        assertThat(message.getBody()).isEqualTo("Fallback protected response");
+        assertThat(message.getAuthor()).isEqualTo("fallback");
+    }
+
+    @Test
     public void testFallback() {
         Message message = testAPI.get404();
         assertThat(message.getBody()).isEqualTo("Error code: 404 !");

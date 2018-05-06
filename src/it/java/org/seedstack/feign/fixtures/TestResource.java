@@ -29,6 +29,13 @@ public class TestResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @Path("/protected-message")
+    public Message protectedSay() {
+        return new Message("Hello World !", "computer");
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("/timeout")
     public Message timeout() {
         try {

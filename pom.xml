@@ -14,14 +14,14 @@
     <parent>
         <groupId>org.seedstack.poms</groupId>
         <artifactId>parent-internal</artifactId>
-        <version>3.2.1</version>
+        <version>3.3.0-SNAPSHOT</version>
     </parent>
 
     <groupId>org.seedstack.addons.feign</groupId>
     <artifactId>feign</artifactId>
     <version>1.2.0-SNAPSHOT</version>
     <properties>
-        <seed.version>3.5.0</seed.version>
+        <seed.version>3.6.0-SNAPSHOT</seed.version>
         <feign.version>9.3.1</feign.version>
 
         <compatibility.version>1.0.0</compatibility.version>
@@ -57,11 +57,16 @@
                             <licenseMerge>Apache 2|Apache License 2.0</licenseMerge>
                             <licenseMerge>Apache 2|Apache License, Version 2.0</licenseMerge>
                             <licenseMerge>Apache 2|The Apache Software License, Version 2.0</licenseMerge>
+                            <licenseMerge>Apache 2|Apache 2.0</licenseMerge>
                             <licenseMerge>BSD|The New BSD License</licenseMerge>
                             <licenseMerge>CDDL|Common Development and Distribution License</licenseMerge>
                             <licenseMerge>CDDL|CDDL + GPLv2 with classpath exception</licenseMerge>
                             <licenseMerge>LGPL 3.0|GNU Lesser Public License</licenseMerge>
                             <licenseMerge>MIT|MIT License</licenseMerge>
+                            <licenseMerge>MIT|MIT license</licenseMerge>
+                            <licenseMerge>MIT|The MIT License</licenseMerge>
+
+                            <licenseMerge>IGNORED_LICENSE|GNU General Public License, version 2 (GPL2), with the classpath exception</licenseMerge>
                         </licenseMerges>
                     </configuration>
                 </plugin>
@@ -149,6 +154,12 @@
         <dependency>
             <groupId>org.seedstack.seed</groupId>
             <artifactId>seed-rest-jersey2</artifactId>
+            <version>${seed.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.seedstack.seed</groupId>
+            <artifactId>seed-web-security</artifactId>
             <version>${seed.version}</version>
             <scope>test</scope>
         </dependency>

@@ -9,16 +9,21 @@
 package org.seedstack.feign.fixtures.apis;
 
 import feign.Headers;
+import feign.Param;
 import feign.RequestLine;
 import org.seedstack.feign.FeignApi;
 import org.seedstack.feign.fixtures.Message;
 
 @FeignApi
-@Headers("Accept: application/json")
+@Headers({"Accept: application/json"})
 public interface TestAPI {
 
     @RequestLine("GET /message")
     Message getMessage();
+
+    @RequestLine("GET /protected-message")
+    @Headers({"Authorization: Basic {credentials}"})
+    Message getProtectedMessage(@Param("credentials") String credentials);
 
     @RequestLine("GET /404")
     Message get404();
