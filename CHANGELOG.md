@@ -1,4 +1,4 @@
-# Version 1.1.1 (2018-??-??)
+# Version 1.2.0 (2018-05-07)
 
 * [chg] The `baseUrl` attribute in `FeignConfig.EndpointConfig` has been changed from `URL` to `String` to allow for incompletely resolved URLs at startup.
 
