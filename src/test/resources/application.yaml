@@ -11,6 +11,18 @@ logging:
     org.seedstack.seed.rest.internal.RestPlugin: DEBUG
     feign.Logger: DEBUG
 
+web:
+  server<https>:
+    https: true
+
+crypto<https>:
+  keystores:
+    master:
+      path: src/test/resources/master.jks
+      password: changeMe
+      aliases:
+        ssl: changeMe
+
 feign:
   endpoints:
     org.seedstack.feign.fixtures.apis.TestAPI:

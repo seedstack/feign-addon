@@ -18,9 +18,11 @@ import feign.Headers;
 import feign.MethodMetadata;
 import feign.Param;
 import feign.QueryMap;
+import feign.Request;
 import feign.RequestLine;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -98,16 +100,16 @@ public class TestContract extends Contract.BaseContract {
                 checkState(requestLine.indexOf('/') == -1,
                         "RequestLine annotation didn't start with an HTTP verb on method %s.",
                         method.getName());
-                data.template().method(requestLine);
+                data.template().method(Request.HttpMethod.valueOf(requestLine));
                 return;
             }
-            data.template().method(requestLine.substring(0, requestLine.indexOf(' ')));
+            data.template().method(Request.HttpMethod.valueOf(requestLine.substring(0, requestLine.indexOf(' '))));
             if (requestLine.indexOf(' ') == requestLine.lastIndexOf(' ')) {
                 // no HTTP version is ok
-                data.template().append(requestLine.substring(requestLine.indexOf(' ') + 1));
+                data.template().uri(requestLine.substring(requestLine.indexOf(' ') + 1));
             } else {
                 // skip HTTP version
-                data.template().append(
+                data.template().uri(
                         requestLine.substring(requestLine.indexOf(' ') + 1,
                                 requestLine.lastIndexOf(' ')));
             }
@@ -118,11 +120,7 @@ public class TestContract extends Contract.BaseContract {
             String body = Body.class.cast(methodAnnotation).value();
             checkState(emptyToNull(body) != null, "Body annotation was empty on method %s.",
                     method.getName());
-            if (body.indexOf('{') == -1) {
-                data.template().body(body);
-            } else {
-                data.template().bodyTemplate(body);
-            }
+            data.template().body(Request.Body.bodyTemplate(body, Charset.defaultCharset()));
         } else if (annotationType == Headers.class) {
             String[] headersOnMethod = Headers.class.cast(methodAnnotation).value();
             checkState(headersOnMethod.length > 0, "Headers annotation was empty on method %s.",

@@ -10,14 +10,17 @@ package org.seedstack.feign.internal;
 
 import com.google.inject.AbstractModule;
 import java.util.Collection;
+import javax.net.ssl.SSLContext;
 
 class FeignModule extends AbstractModule {
     private final Collection<Class<?>> feignInterfaces;
     private final Collection<Class<?>> bindings;
+    private final SSLContext sslContext;
 
-    FeignModule(Collection<Class<?>> feignInterfaces, Collection<Class<?>> bindings) {
+    FeignModule(Collection<Class<?>> feignInterfaces, Collection<Class<?>> bindings, SSLContext sslContext) {
         this.feignInterfaces = feignInterfaces;
         this.bindings = bindings;
+        this.sslContext = sslContext;
     }
 
     @Override
@@ -28,7 +31,7 @@ class FeignModule extends AbstractModule {
         }
 
         for (Class<?> feignApi : feignInterfaces) {
-            bind(feignApi).toProvider(new FeignProvider(feignApi));
+            bind(feignApi).toProvider(new FeignProvider(feignApi, sslContext));
         }
     }
 

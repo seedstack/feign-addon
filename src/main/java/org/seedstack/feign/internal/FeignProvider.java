@@ -9,6 +9,7 @@
 package org.seedstack.feign.internal;
 
 import com.google.inject.Injector;
+import feign.Client;
 import feign.Contract;
 import feign.Feign;
 import feign.Logger;
@@ -22,6 +23,7 @@ import feign.hystrix.HystrixFeign;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.net.ssl.SSLContext;
 import org.seedstack.feign.FeignConfig;
 import org.seedstack.feign.FeignConfig.EndpointConfig;
 import org.seedstack.seed.Configuration;
@@ -31,13 +33,15 @@ import org.seedstack.shed.reflect.Classes;
 class FeignProvider<T> implements Provider<Object> {
     private static final boolean HYSTRIX_PRESENT = Classes.optional("com.netflix.hystrix.Hystrix").isPresent();
     private final Class<T> feignApi;
+    private final SSLContext sslContext;
     @Configuration
     private FeignConfig config;
     @Inject
     private Injector injector;
 
-    FeignProvider(Class<T> feignApi) {
+    FeignProvider(Class<T> feignApi, SSLContext sslContext) {
         this.feignApi = feignApi;
+        this.sslContext = sslContext;
     }
 
     @SuppressWarnings("unchecked")
@@ -45,18 +49,33 @@ class FeignProvider<T> implements Provider<Object> {
     public Object get() {
         FeignConfig.EndpointConfig endpointConfig = config.getEndpoints().get(feignApi);
         Feign.Builder builder = createBuilder(endpointConfig);
+
+        // Encoder and decoder
         builder.encoder(instantiateEncoder(endpointConfig.getEncoder()));
         builder.decoder(instantiateDecoder(endpointConfig.getDecoder()));
+
+        // Contract
         if (endpointConfig.getContract() != null) {
             builder.contract(instantiateContract(endpointConfig.getContract()));
         }
+
+        // Logger
         builder.logger(instantiateLogger(endpointConfig.getLogger()));
         builder.logLevel(endpointConfig.getLogLevel());
+
+        // Timeouts
         TimeUnit timeUnit = endpointConfig.getTimeUnit();
         builder.options(new Request.Options(
                 (int) timeUnit.toMillis(endpointConfig.getConnectTimeout()),
                 (int) timeUnit.toMillis(endpointConfig.getReadTimeout()))
         );
+
+        // HTTP(s) client
+        if (sslContext != null) {
+            builder.client(new Client.Default(sslContext.getSocketFactory(), null));
+        } else {
+            builder.client(new Client.Default(null, null));
+        }
 
         Class<T> fallback = endpointConfig.getFallback();
         if (fallback != null) {

@@ -1,3 +1,8 @@
+# Version 1.3.0 (2019-01-18)
+
+* [fix] Properly use SeedStack SSLContext for HTTPS feign connections.
+* [chg] Update feign to 10.1.0.
+
 # Version 1.2.0 (2018-05-07)
 
 * [chg] The `baseUrl` attribute in `FeignConfig.EndpointConfig` has been changed from `URL` to `String` to allow for incompletely resolved URLs at startup.

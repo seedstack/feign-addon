@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 
 @RunWith(JUnit4Runner.class)
 @LaunchWithUndertow
-public class FeignIT {
+public abstract class AbstractFeignIT {
     @Logging
     private Logger logger;
 
