@@ -1,0 +1,68 @@
+#
+# Copyright © 2013-2019, The SeedStack authors <http://seedstack.org>
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+
+logging:
+  loggers:
+    org.seedstack.seed.rest.internal.RestPlugin: DEBUG
+    feign.Logger: DEBUG
+
+web:
+  server<https>:
+    https: true
+
+crypto<https>:
+  keystores:
+    master:
+      path: src/test/resources/master.jks
+      password: changeMe
+      aliases:
+        ssl: changeMe
+
+feign:
+  endpoints:
+    org.seedstack.feign.fixtures.apis.TestAPI:
+      baseUrl: ${web.runtime.baseUrl}feign
+      fallback: org.seedstack.feign.fixtures.TestFallback
+      logger: feign.slf4j.Slf4jLogger
+      logLevel: HEADERS
+      hystrixWrapper: AUTO
+    org.seedstack.feign.fixtures.apis.TimeoutAPI:
+      baseUrl: ${web.runtime.baseUrl}feign
+      logLevel: BASIC
+      fallback: org.seedstack.feign.fixtures.TimeoutFallbackFactory
+      logger: feign.slf4j.Slf4jLogger
+      hystrixWrapper: AUTO
+      connectTimeout: 5000
+      readTimeout: 2000
+    org.seedstack.feign.fixtures.apis.TestContractAPI:
+      baseUrl: ${web.runtime.baseUrl}feign
+      contract: org.seedstack.feign.fixtures.TestContract
+      hystrixWrapper: DISABLED
+    org.seedstack.feign.fixtures.apis.HystrixEnabledAPI:
+      baseUrl: ${web.runtime.baseUrl}feign
+      logLevel: BASIC
+      fallback: org.seedstack.feign.fixtures.TestFallback
+      hystrixWrapper: ENABLED
+    org.seedstack.feign.fixtures.apis.HystrixDisabledAPI:
+      baseUrl: ${web.runtime.baseUrl}feign
+      logLevel: BASIC
+      hystrixWrapper: DISABLED  
+    org.seedstack.feign.fixtures.apis.TargetableAPI:
+      baseUrl: http://ignore.this.is.overriden
+      logLevel: BASIC
+      target: org.seedstack.feign.fixtures.TestTarget
+      hystrixWrapper: DISABLED
+
+security:
+  users:
+    test: test
+  web:
+    urls:
+      -
+        pattern: /feign/protected-message
+        filters: [ authcBasic ]

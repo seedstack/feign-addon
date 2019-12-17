@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013-2016, The SeedStack authors <http://seedstack.org>
+/*
+ * Copyright © 2013-2019, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7,12 +7,12 @@
  */
 package org.seedstack.feign;
 
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.container.test.api.RunAsClient;
-import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.net.URL;
+import javax.inject.Inject;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.seedstack.feign.fixtures.Message;
 import org.seedstack.feign.fixtures.TestContract;
 import org.seedstack.feign.fixtures.apis.HystrixDisabledAPI;
@@ -20,19 +20,27 @@ import org.seedstack.feign.fixtures.apis.HystrixEnabledAPI;
 import org.seedstack.feign.fixtures.apis.TargetableAPI;
 import org.seedstack.feign.fixtures.apis.TestAPI;
 import org.seedstack.feign.fixtures.apis.TestContractAPI;
-import org.seedstack.seed.it.AbstractSeedWebIT;
+import org.seedstack.feign.fixtures.apis.TimeoutAPI;
+import org.seedstack.seed.Configuration;
+import org.seedstack.seed.Logging;
+import org.seedstack.seed.testing.junit4.internal.JUnit4Runner;
+import org.seedstack.seed.undertow.LaunchWithUndertow;
+import org.slf4j.Logger;
 
-import javax.inject.Inject;
-import java.net.URL;
+@RunWith(JUnit4Runner.class)
+@LaunchWithUndertow
+public abstract class AbstractFeignIT {
+    @Logging
+    private Logger logger;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-public class FeignIT extends AbstractSeedWebIT {
-    @ArquillianResource
+    @Configuration("web.runtime.baseUrl")
     private URL baseUrl;
 
     @Inject
     private TestAPI testAPI;
+
+    @Inject
+    private TimeoutAPI timeoutAPI;
 
     @Inject
     private TestContractAPI contractAPI;
@@ -45,44 +53,33 @@ public class FeignIT extends AbstractSeedWebIT {
 
     @Inject
     private TargetableAPI targetableAPI;
-    
-    @Deployment
-    public static WebArchive createDeployment() {
-        return ShrinkWrap.create(WebArchive.class, "feign.war");
-    }
 
     @Test
-    @RunAsClient
     public void feignClientIsInjectable() throws Exception {
         assertThat(testAPI).isNotNull();
     }
 
     @Test
-    @RunAsClient
     public void feignContractClientIsInjectable() throws Exception {
         assertThat(contractAPI).isNotNull();
     }
 
     @Test
-    @RunAsClient
     public void feignHystrixEnabledClientIsInjectable() throws Exception {
         assertThat(hystrixEnabledAPI).isNotNull();
     }
 
     @Test
-    @RunAsClient
     public void feignHystrixDisabledClientIsInjectable() throws Exception {
         assertThat(hystrixDisabledAPI).isNotNull();
     }
-    
+
     @Test
-    @RunAsClient
     public void feignTargetableClientIsInjectable() throws Exception {
         assertThat(targetableAPI).isNotNull();
     }
 
     @Test
-    @RunAsClient
     public void testNominalCall() {
         Message message = testAPI.getMessage();
         assertThat(message.getBody()).isEqualTo("Hello World !");
@@ -90,7 +87,20 @@ public class FeignIT extends AbstractSeedWebIT {
     }
 
     @Test
-    @RunAsClient
+    public void testProtectedCall() {
+        Message message = testAPI.getProtectedMessage("dGVzdDp0ZXN0");
+        assertThat(message.getBody()).isEqualTo("Hello World !");
+        assertThat(message.getAuthor()).isEqualTo("computer");
+    }
+
+    @Test
+    public void testProtectedCallInvalidAuthz() {
+        Message message = testAPI.getProtectedMessage("xxx");
+        assertThat(message.getBody()).isEqualTo("Fallback protected response");
+        assertThat(message.getAuthor()).isEqualTo("fallback");
+    }
+
+    @Test
     public void testFallback() {
         Message message = testAPI.get404();
         assertThat(message.getBody()).isEqualTo("Error code: 404 !");
@@ -98,7 +108,15 @@ public class FeignIT extends AbstractSeedWebIT {
     }
 
     @Test
-    @RunAsClient
+    public void testTimeout() {
+        logger.info("Issuing request");
+        Message message = timeoutAPI.getMessage();
+        logger.info("After timeout");
+        assertThat(message.getBody()).isEqualTo("Fallback response after timeout");
+        assertThat(message.getAuthor()).isEqualTo("fallback");
+    }
+
+    @Test
     public void testContractNominalCall() {
         Message message = contractAPI.getMessage();
         assertThat(message.getBody()).isEqualTo("Hello World !");
@@ -107,7 +125,6 @@ public class FeignIT extends AbstractSeedWebIT {
     }
 
     @Test
-    @RunAsClient
     public void testHystrixEnabledNominalCall() {
         Message message = hystrixEnabledAPI.getMessage();
         assertThat(message.getBody()).isEqualTo("Hello World !");
@@ -115,15 +132,13 @@ public class FeignIT extends AbstractSeedWebIT {
     }
 
     @Test
-    @RunAsClient
     public void testHystrixDisabledNominalCall() {
         Message message = hystrixDisabledAPI.getMessage();
         assertThat(message.getBody()).isEqualTo("Hello World !");
         assertThat(message.getAuthor()).isEqualTo("computer");
     }
-    
+
     @Test
-    @RunAsClient
     public void testTargetableNominalCall() {
         Message message = targetableAPI.getMessage();
         assertThat(message.getBody()).isEqualTo("I was routed trough a custom target");

@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013-2016, The SeedStack authors <http://seedstack.org>
+/*
+ * Copyright © 2013-2019, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7,22 +7,28 @@
  */
 package org.seedstack.feign.internal;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-
-import org.kametic.specifications.Specification;
-import org.seedstack.seed.core.internal.AbstractSeedPlugin;
-
+import com.google.common.collect.Lists;
+import feign.Contract;
+import feign.Target;
 import io.nuun.kernel.api.plugin.InitState;
 import io.nuun.kernel.api.plugin.context.InitContext;
 import io.nuun.kernel.api.plugin.request.ClasspathScanRequest;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import javax.net.ssl.SSLContext;
+import org.kametic.specifications.Specification;
+import org.seedstack.feign.FeignConfig;
+import org.seedstack.seed.core.internal.AbstractSeedPlugin;
+import org.seedstack.seed.core.internal.crypto.CryptoPlugin;
 
 public class FeignPlugin extends AbstractSeedPlugin {
-    private final Specification<Class<?>> FEIGN_INTERFACE_SPECIFICATION = new FeignInterfaceSpecification();
-    private final Specification<Class<?>> FEIGN_TARGET_SPECIFICATION = new FeignTargetInterfaceSpecification();
-    private final Collection<Class<?>> feignApis = new ArrayList<>();
-    private final Collection<Class<?>> feignTargets = new ArrayList<>();
+    private final Specification<Class<?>> feignInterfaceSpecification = new FeignInterfaceSpecification();
+    private final Collection<Class<?>> feignInterfaces = new ArrayList<>();
+    private final Set<Class<?>> bindings = new HashSet<>();
+    private SSLContext sslContext;
 
     @Override
     public String name() {
@@ -30,10 +36,14 @@ public class FeignPlugin extends AbstractSeedPlugin {
     }
 
     @Override
+    protected Collection<Class<?>> dependencies() {
+        return Lists.newArrayList(CryptoPlugin.class);
+    }
+
+    @Override
     public Collection<ClasspathScanRequest> classpathScanRequests() {
         return classpathScanRequestBuilder()
-                .specification(FEIGN_INTERFACE_SPECIFICATION)
-                .specification(FEIGN_TARGET_SPECIFICATION)
+                .specification(feignInterfaceSpecification)
                 .build();
     }
 
@@ -41,14 +51,36 @@ public class FeignPlugin extends AbstractSeedPlugin {
     @Override
     protected InitState initialize(InitContext initContext) {
         Map<Specification, Collection<Class<?>>> scannedClasses = initContext.scannedTypesBySpecification();
-        feignApis.addAll(scannedClasses.get(FEIGN_INTERFACE_SPECIFICATION));
-        feignTargets.addAll(scannedClasses.get(FEIGN_TARGET_SPECIFICATION));
+        feignInterfaces.addAll(scannedClasses.get(feignInterfaceSpecification));
+
+        // Add simple bindings
+        for (FeignConfig.EndpointConfig endpointConfig : getConfiguration(FeignConfig.class).getEndpoints().values()) {
+            Class<? extends Target<?>> target = endpointConfig.getTarget(Object.class);
+            if (!target.equals(Target.HardCodedTarget.class)) {
+                bindings.add(target);
+            }
+            Class<? extends Contract> contract = endpointConfig.getContract();
+            if (contract != null) {
+                bindings.add(contract);
+            }
+            bindings.add(endpointConfig.getEncoder());
+            bindings.add(endpointConfig.getDecoder());
+            bindings.add(endpointConfig.getLogger());
+            Class<?> fallback = endpointConfig.getFallback();
+            if (fallback != null) {
+                bindings.add(fallback);
+            }
+        }
+
+        // Retrieve SSL context if any
+        initContext.dependency(CryptoPlugin.class).sslContext().ifPresent(sslContext -> this.sslContext = sslContext);
+
         return InitState.INITIALIZED;
     }
 
     @Override
     public Object nativeUnitModule() {
-        return new FeignModule(feignApis,feignTargets);
+        return new FeignModule(feignInterfaces, bindings, sslContext);
     }
 
 }
