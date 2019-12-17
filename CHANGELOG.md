@@ -1,3 +1,9 @@
+# Version 1.4.0 (2019-12-??)
+
+* [chg] Update feign to 10.7.0
+* [chg] Update parent-internal to 3.4.7
+* [chg] Update seed.version to 3.9.0
+
 # Version 1.3.0 (2019-01-18)
 
 * [fix] Properly use SeedStack SSLContext for HTTPS feign connections.

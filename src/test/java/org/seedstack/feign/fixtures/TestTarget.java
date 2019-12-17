@@ -22,7 +22,7 @@ public class TestTarget extends HardCodedTarget<TargetableAPI> {
     public TestTarget(Application application) {
         super(TargetableAPI.class, String.format("%sfeign/target/",
                 application.getConfiguration().getMandatory(String.class,
-                        "web.runtime.baseUrl")));
+                        "runtime.web.baseUrlSlash")));
     }
 
     @Override

@@ -23,17 +23,17 @@ import org.seedstack.feign.fixtures.apis.TestContractAPI;
 import org.seedstack.feign.fixtures.apis.TimeoutAPI;
 import org.seedstack.seed.Configuration;
 import org.seedstack.seed.Logging;
-import org.seedstack.seed.testing.junit4.internal.JUnit4Runner;
+import org.seedstack.seed.testing.junit4.SeedITRunner;
 import org.seedstack.seed.undertow.LaunchWithUndertow;
 import org.slf4j.Logger;
 
-@RunWith(JUnit4Runner.class)
+@RunWith(SeedITRunner.class)
 @LaunchWithUndertow
 public abstract class AbstractFeignIT {
     @Logging
     private Logger logger;
 
-    @Configuration("web.runtime.baseUrl")
+    @Configuration("runtime.web.baseUrlSlash")
     private URL baseUrl;
 
     @Inject
