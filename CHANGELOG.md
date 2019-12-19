@@ -1,4 +1,4 @@
-# Version 1.4.0 (2019-12-??)
+# Version 1.4.0 (2019-12-19)
 
 * [chg] Update feign to 10.7.0
 * [chg] Update parent-internal to 3.4.7
