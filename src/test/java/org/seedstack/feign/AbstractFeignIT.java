@@ -33,7 +33,7 @@ public abstract class AbstractFeignIT {
     @Logging
     private Logger logger;
 
-    @Configuration("runtime.web.baseUrlSlash")
+    @Configuration("runtime.web.baseUrl")
     private URL baseUrl;
 
     @Inject

@@ -12,15 +12,15 @@ logging:
     feign.Logger: DEBUG
 
 web:
-  server<https>:
-    https: true
+  server:
+    https<https>: true
 
 crypto<https>:
   ssl: changeMe
   truststore:
     path: src/test/resources/master.jks
     password: changeMe
-    
+
   keystores:
     master:
       path: src/test/resources/master.jks
@@ -31,13 +31,13 @@ crypto<https>:
 feign:
   endpoints:
     org.seedstack.feign.fixtures.apis.TestAPI:
-      baseUrl: ${runtime.web.baseUrlSlash}feign
+      baseUrl: ${runtime.web.baseUrl}/feign
       fallback: org.seedstack.feign.fixtures.TestFallback
       logger: feign.slf4j.Slf4jLogger
       logLevel: HEADERS
       hystrixWrapper: AUTO
     org.seedstack.feign.fixtures.apis.TimeoutAPI:
-      baseUrl: ${runtime.web.baseUrlSlash}feign
+      baseUrl: ${runtime.web.baseUrl}/feign
       logLevel: BASIC
       fallback: org.seedstack.feign.fixtures.TimeoutFallbackFactory
       logger: feign.slf4j.Slf4jLogger
@@ -45,16 +45,16 @@ feign:
       connectTimeout: 5000
       readTimeout: 2000
     org.seedstack.feign.fixtures.apis.TestContractAPI:
-      baseUrl: ${runtime.web.baseUrlSlash}feign
+      baseUrl: ${runtime.web.baseUrl}/feign
       contract: org.seedstack.feign.fixtures.TestContract
       hystrixWrapper: DISABLED
     org.seedstack.feign.fixtures.apis.HystrixEnabledAPI:
-      baseUrl: ${runtime.web.baseUrlSlash}feign
+      baseUrl: ${runtime.web.baseUrl}/feign
       logLevel: BASIC
       fallback: org.seedstack.feign.fixtures.TestFallback
       hystrixWrapper: ENABLED
     org.seedstack.feign.fixtures.apis.HystrixDisabledAPI:
-      baseUrl: ${runtime.web.baseUrlSlash}feign
+      baseUrl: ${runtime.web.baseUrl}/feign
       logLevel: BASIC
       hystrixWrapper: DISABLED  
     org.seedstack.feign.fixtures.apis.TargetableAPI:

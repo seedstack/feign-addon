@@ -20,9 +20,9 @@ public class TestTarget extends HardCodedTarget<TargetableAPI> {
 
     @Inject
     public TestTarget(Application application) {
-        super(TargetableAPI.class, String.format("%sfeign/target/",
+        super(TargetableAPI.class, String.format("%s/feign/target/",
                 application.getConfiguration().getMandatory(String.class,
-                        "runtime.web.baseUrlSlash")));
+                        "runtime.web.baseUrl")));
     }
 
     @Override
