@@ -18,13 +18,10 @@ in your code.<!--more-->
 
 {{< dependency g="org.seedstack.addons.feign" a="feign" >}}
 
-{{% callout info %}}
-See the documentation on the page's project: [https://github.com/OpenFeign/feign](https://github.com/OpenFeign/feign)
-{{% /callout %}}
-
 ## How to use
 
 First, you need to create an interface annotated by `@FeignApi`, with each method being an HTTP call. Annotate each method with `@RequestLine`:
+
 ```java
 @FeignApi
 public interface Api {
@@ -37,6 +34,7 @@ public interface Api {
 ```
 
 Then, you can use this API by injecting it:
+
 ```java
 public class MyClass {
     @Inject
@@ -50,6 +48,10 @@ public class MyClass {
     }
 }
 ```
+
+{{% callout info %}}
+For more information about OpenFeign, look into its documentation: [https://github.com/OpenFeign/feign](https://github.com/OpenFeign/feign).
+{{% /callout %}}
 
 ## Configuration
 
@@ -70,7 +72,7 @@ feign:
 
 With all the options, the configuration file looks like this:
 
-```ini
+```yaml
 feign:
     endpoints:
         com.mycompany.myapp.Api: 
@@ -91,7 +93,55 @@ The values in this example are the default values, except for `baseUrl` and `fal
 * `hystrixWrapper` is an enum (`AUTO`, `ENABLED`, `DISABLED`). Feign comes with Hystrix circuit-breaker support. `DISABLED` disables this functionality. `ENABLED` tells Feign to wrap all requests in Hystrix mechanism, but the lib Hystrix must be in the classpath of your project. `AUTO` mode will scan the classpath and if Hystrix is present, will wrap requests with it.
 * `fallback` takes a fully qualified class name and is only relevant when Hystrix is used. The fallback class must implement your API interface and will be used to return default values in case the requests are in error.
 
-Fallback example:
+## Authentication
+
+To call an API protected with authentication you can specify a header in your Feign interface with the `@Headers` annotation (example for basic authentication):
+
+```yaml
+    @FeignApi
+    @Headers({"Authorization: Basic {credentials}"})
+    public interface neosdServer {
+    
+        @RequestLine("GET /file/getfilesprop")
+        List<NeosdFile> getfilesprop(@Param("credentials") String credentials);
+    
+        @RequestLine("GET /file/getfiles")
+        List<String> getfiles(@Param("credentials") String credentials);
+    }
+```
+
+{{% callout info %}}
+Note that `@Headers` can also be used on individual methods. 
+{{% /callout %}}
+
+Then, pass the credentials as method parameter. An example implementation, with credentials coming from your application configuration, coudl be:
+
+```yaml
+    public class MyClass {
+        @Configuration("myApp.credentials.user")
+        private String username;
+        @Configuration("myApp.credentials.password")
+        private String password;
+        @Inject
+        private NeoSdClient client;
+    
+        public void myMethod() {
+            List<String> files = client.getFiles(encodeCredentials());
+        }
+    
+        private String encodeCredentials() {
+            return BaseEncoding
+                    .base64()
+                    .encode((username + ":" + password)
+                            .getBytes(Charsets.UTF_8));
+        }
+    }
+```
+
+## Fallback
+
+A fallback class is done by implementing the Feign interface and return default values from it:
+
 ```java
 public class Fallback implements Api {
      @Override
