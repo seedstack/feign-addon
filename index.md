@@ -97,17 +97,17 @@ The values in this example are the default values, except for `baseUrl` and `fal
 
 To call an API protected with authentication you can specify a header in your Feign interface with the `@Headers` annotation (example for basic authentication):
 
-```yaml
-    @FeignApi
-    @Headers({"Authorization: Basic {credentials}"})
-    public interface neosdServer {
-    
-        @RequestLine("GET /file/getfilesprop")
-        List<NeosdFile> getfilesprop(@Param("credentials") String credentials);
-    
-        @RequestLine("GET /file/getfiles")
-        List<String> getfiles(@Param("credentials") String credentials);
-    }
+```java
+@FeignApi
+@Headers({"Authorization: Basic {credentials}"})
+public interface neosdServer {
+
+    @RequestLine("GET /file/getfilesprop")
+    List<NeosdFile> getfilesprop(@Param("credentials") String credentials);
+
+    @RequestLine("GET /file/getfiles")
+    List<String> getfiles(@Param("credentials") String credentials);
+}
 ```
 
 {{% callout info %}}
@@ -116,26 +116,26 @@ Note that `@Headers` can also be used on individual methods.
 
 Then, pass the credentials as method parameter. An example implementation, with credentials coming from your application configuration, coudl be:
 
-```yaml
-    public class MyClass {
-        @Configuration("myApp.credentials.user")
-        private String username;
-        @Configuration("myApp.credentials.password")
-        private String password;
-        @Inject
-        private NeoSdClient client;
-    
-        public void myMethod() {
-            List<String> files = client.getFiles(encodeCredentials());
-        }
-    
-        private String encodeCredentials() {
-            return BaseEncoding
-                    .base64()
-                    .encode((username + ":" + password)
-                            .getBytes(Charsets.UTF_8));
-        }
+```java
+public class MyClass {
+    @Configuration("myApp.credentials.user")
+    private String username;
+    @Configuration("myApp.credentials.password")
+    private String password;
+    @Inject
+    private NeoSdClient client;
+
+    public void myMethod() {
+        List<String> files = client.getFiles(encodeCredentials());
     }
+
+    private String encodeCredentials() {
+        return BaseEncoding
+                .base64()
+                .encode((username + ":" + password)
+                        .getBytes(Charsets.UTF_8));
+    }
+}
 ```
 
 ## Fallback
