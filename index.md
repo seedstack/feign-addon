@@ -39,11 +39,13 @@ Then, you can use this API by injecting it:
 public class MyClass {
     @Inject
     private Api api;
+    @Logging
+    private Logger logger;
     
-    public static void main(String... args) {
+    public void someMethod() {
         List<Message> messages = api.getMessages();
         for (Message message : messages) {
-            System.out.println(message.author);
+            logger.info("Received message from {}", message.author);
         }
     }
 }
