@@ -1,3 +1,7 @@
+# Version 1.4.0 (2020-08-05)
+
+* [new] Support configuration of injectable endpoint request interceptors using the `interceptors` configuration property.
+
 # Version 1.3.1 (2019-12-19)
 
 * [chg] Update feign to 10.7.0

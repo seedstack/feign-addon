@@ -1,6 +1,6 @@
 <!--
 
-    Copyright © 2013-2019, The SeedStack authors <http://seedstack.org>
+    Copyright © 2013-2020, The SeedStack authors <http://seedstack.org>
 
     This Source Code Form is subject to the terms of the Mozilla Public
     License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,15 +14,16 @@
     <parent>
         <groupId>org.seedstack.poms</groupId>
         <artifactId>parent-internal</artifactId>
-        <version>3.4.7</version>
+        <version>3.4.9-SNAPSHOT</version>
     </parent>
 
     <groupId>org.seedstack.addons.feign</groupId>
     <artifactId>feign</artifactId>
-    <version>1.3.1-SNAPSHOT</version>
+    <version>1.4.0-SNAPSHOT</version>
     <properties>
-        <seed.version>3.9.0</seed.version>
-        <feign.version>10.7.0</feign.version>
+        <seed.version>3.10.0-SNAPSHOT</seed.version>
+        <feign.version>11.0</feign.version>
+        <netflix-hystrix.version>1.2.2-SNAPSHOT</netflix-hystrix.version>
 
         <compatibility.version>1.0.0</compatibility.version>
 
@@ -66,7 +67,9 @@
                             <licenseMerge>MIT|MIT license</licenseMerge>
                             <licenseMerge>MIT|The MIT License</licenseMerge>
 
-                            <licenseMerge>IGNORED_LICENSE|GNU General Public License, version 2 (GPL2), with the classpath exception</licenseMerge>
+                            <licenseMerge>IGNORED_LICENSE|GNU General Public License, version 2 (GPL2), with the
+                                classpath exception
+                            </licenseMerge>
                         </licenseMerges>
                     </configuration>
                 </plugin>
@@ -197,15 +200,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.netflix.hystrix</groupId>
-            <artifactId>hystrix-core</artifactId>
-            <version>1.5.18</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.seedstack.addons.netflix</groupId>
             <artifactId>netflix-hystrix</artifactId>
-            <version>1.2.1</version>
+            <version>${netflix-hystrix.version}</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2019, The SeedStack authors <http://seedstack.org>
+ * Copyright © 2013-2020, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -119,7 +119,7 @@ public class TestContract extends Contract.BaseContract {
             String body = Body.class.cast(methodAnnotation).value();
             checkState(emptyToNull(body) != null, "Body annotation was empty on method %s.",
                     method.getName());
-            data.template().body(Request.Body.bodyTemplate(body, Charset.defaultCharset()));
+            data.template().body(Request.Body.create(body, Charset.defaultCharset()));
         } else if (annotationType == Headers.class) {
             String[] headersOnMethod = Headers.class.cast(methodAnnotation).value();
             checkState(headersOnMethod.length > 0, "Headers annotation was empty on method %s.",

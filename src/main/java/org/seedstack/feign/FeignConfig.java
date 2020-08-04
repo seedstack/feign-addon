@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2019, The SeedStack authors <http://seedstack.org>
+ * Copyright © 2013-2020, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,6 +9,7 @@ package org.seedstack.feign;
 
 import feign.Contract;
 import feign.Logger;
+import feign.RequestInterceptor;
 import feign.Target;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
@@ -16,16 +17,15 @@ import feign.codec.Encoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 import org.seedstack.coffig.Config;
 import org.seedstack.coffig.SingleValue;
 import org.seedstack.feign.internal.FeignErrorCode;
 import org.seedstack.seed.SeedException;
+
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Config("feign")
 public class FeignConfig {
@@ -66,6 +66,9 @@ public class FeignConfig {
         private int connectTimeout = 10000;
         @Min(0)
         private int readTimeout = 60000;
+        private boolean followRedirects = true;
+        @NotNull
+        private List<Class<? extends RequestInterceptor>> interceptors = new ArrayList<>();
         @NotNull
         private HystrixWrapperMode hystrixWrapper = HystrixWrapperMode.AUTO;
         private Class<?> fallback;
@@ -189,6 +192,23 @@ public class FeignConfig {
         public EndpointConfig setReadTimeout(int readTimeout) {
             this.readTimeout = readTimeout;
             return this;
+        }
+
+        public boolean isFollowRedirects() {
+            return followRedirects;
+        }
+
+        public EndpointConfig setFollowRedirects(boolean followRedirects) {
+            this.followRedirects = followRedirects;
+            return this;
+        }
+
+        public List<Class<? extends RequestInterceptor>> getInterceptors() {
+            return Collections.unmodifiableList(interceptors);
+        }
+
+        public void addInterceptor(Class<? extends RequestInterceptor> interceptor) {
+            this.interceptors.add(interceptor);
         }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2019, The SeedStack authors <http://seedstack.org>
+ * Copyright © 2013-2020, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,26 +8,21 @@
 package org.seedstack.feign.internal;
 
 import com.google.inject.Injector;
-import feign.Client;
-import feign.Contract;
-import feign.Feign;
-import feign.Logger;
-import feign.Request;
-import feign.Target;
+import feign.*;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.hystrix.FallbackFactory;
 import feign.hystrix.HystrixFeign;
-import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.net.ssl.SSLContext;
 import org.seedstack.feign.FeignConfig;
 import org.seedstack.feign.FeignConfig.EndpointConfig;
 import org.seedstack.seed.Configuration;
 import org.seedstack.seed.SeedException;
 import org.seedstack.shed.reflect.Classes;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.net.ssl.SSLContext;
 
 class FeignProvider<T> implements Provider<Object> {
     private static final boolean HYSTRIX_PRESENT = Classes.optional("com.netflix.hystrix.Hystrix").isPresent();
@@ -62,11 +57,11 @@ class FeignProvider<T> implements Provider<Object> {
         builder.logger(instantiateLogger(endpointConfig.getLogger()));
         builder.logLevel(endpointConfig.getLogLevel());
 
-        // Timeouts
-        TimeUnit timeUnit = endpointConfig.getTimeUnit();
+        // Timeouts and follow redirects
         builder.options(new Request.Options(
-                (int) timeUnit.toMillis(endpointConfig.getConnectTimeout()),
-                (int) timeUnit.toMillis(endpointConfig.getReadTimeout()))
+                endpointConfig.getConnectTimeout(), endpointConfig.getTimeUnit(),
+                endpointConfig.getReadTimeout(), endpointConfig.getTimeUnit(),
+                endpointConfig.isFollowRedirects())
         );
 
         // HTTP(s) client
@@ -75,6 +70,9 @@ class FeignProvider<T> implements Provider<Object> {
         } else {
             builder.client(new Client.Default(null, null));
         }
+
+        // Interceptors
+        endpointConfig.getInterceptors().forEach(i -> builder.requestInterceptor(injector.getInstance(i)));
 
         Class<T> fallback = endpointConfig.getFallback();
         if (fallback != null) {

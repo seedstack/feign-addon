@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2019, The SeedStack authors <http://seedstack.org>
+ * Copyright © 2013-2020, The SeedStack authors <http://seedstack.org>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7,25 +7,22 @@
  */
 package org.seedstack.feign;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.net.URL;
-import javax.inject.Inject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.seedstack.feign.fixtures.Message;
 import org.seedstack.feign.fixtures.TestContract;
-import org.seedstack.feign.fixtures.apis.HystrixDisabledAPI;
-import org.seedstack.feign.fixtures.apis.HystrixEnabledAPI;
-import org.seedstack.feign.fixtures.apis.TargetableAPI;
-import org.seedstack.feign.fixtures.apis.TestAPI;
-import org.seedstack.feign.fixtures.apis.TestContractAPI;
-import org.seedstack.feign.fixtures.apis.TimeoutAPI;
+import org.seedstack.feign.fixtures.TestInterceptor;
+import org.seedstack.feign.fixtures.apis.*;
 import org.seedstack.seed.Configuration;
 import org.seedstack.seed.Logging;
 import org.seedstack.seed.testing.junit4.SeedITRunner;
 import org.seedstack.seed.undertow.LaunchWithUndertow;
 import org.slf4j.Logger;
+
+import javax.inject.Inject;
+import java.net.URL;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SeedITRunner.class)
 @LaunchWithUndertow
@@ -84,6 +81,7 @@ public abstract class AbstractFeignIT {
         Message message = testAPI.getMessage();
         assertThat(message.getBody()).isEqualTo("Hello World !");
         assertThat(message.getAuthor()).isEqualTo("computer");
+        assertThat(TestInterceptor.called).isTrue();
     }
 
     @Test
