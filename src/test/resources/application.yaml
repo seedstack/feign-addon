@@ -64,6 +64,10 @@ feign:
       logLevel: BASIC
       target: org.seedstack.feign.fixtures.TestTarget
       hystrixWrapper: DISABLED
+    org.seedstack.feign.fixtures.apis.ErrorDecoderTestAPI:
+      baseUrl: ${runtime.web.baseUrl}/feign
+      errorDecoder: org.seedstack.feign.fixtures.TestErrorDecoder
+      hystrixWrapper: DISABLED
 
 security:
   users:

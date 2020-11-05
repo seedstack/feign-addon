@@ -61,6 +61,9 @@ public class FeignPlugin extends AbstractSeedPlugin {
             }
             bindings.add(endpointConfig.getEncoder());
             bindings.add(endpointConfig.getDecoder());
+            if(endpointConfig.getErrorDecoder() !=null) {
+                bindings.add(endpointConfig.getErrorDecoder());
+            }
             bindings.add(endpointConfig.getLogger());
             Class<?> fallback = endpointConfig.getFallback();
             if (fallback != null) {

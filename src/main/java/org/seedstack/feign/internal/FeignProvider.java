@@ -12,6 +12,7 @@ import feign.*;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
 import feign.hystrix.FallbackFactory;
 import feign.hystrix.HystrixFeign;
 import org.seedstack.feign.FeignConfig;
@@ -51,6 +52,10 @@ class FeignProvider<T> implements Provider<Object> {
         // Contract
         if (endpointConfig.getContract() != null) {
             builder.contract(instantiateContract(endpointConfig.getContract()));
+        }
+
+        if(endpointConfig.getErrorDecoder() != null){
+            builder.errorDecoder(instantiateErrorDecoder(endpointConfig.getErrorDecoder()));
         }
 
         // Logger
@@ -152,6 +157,15 @@ class FeignProvider<T> implements Provider<Object> {
         } catch (Exception e) {
             throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_DECODER)
                     .put("class", decoderClass);
+        }
+    }
+
+    private ErrorDecoder instantiateErrorDecoder(Class<? extends ErrorDecoder> errorDecoderClass){
+        try{
+            return injector.getInstance(errorDecoderClass);
+        }catch (Exception e){
+            throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_ERROR_DECODER)
+                    .put("class", errorDecoderClass);
         }
     }
 
