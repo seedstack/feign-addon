@@ -7,8 +7,10 @@
  */
 package org.seedstack.feign;
 
+import feign.FeignException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.seedstack.feign.fixtures.FeignTestException;
 import org.seedstack.feign.fixtures.Message;
 import org.seedstack.feign.fixtures.TestContract;
 import org.seedstack.feign.fixtures.TestInterceptor;
@@ -50,6 +52,9 @@ public abstract class AbstractFeignIT {
 
     @Inject
     private TargetableAPI targetableAPI;
+
+    @Inject
+    private ErrorDecoderTestAPI errorDecoderTestAPI;
 
     @Test
     public void feignClientIsInjectable() throws Exception {
@@ -141,6 +146,21 @@ public abstract class AbstractFeignIT {
         Message message = targetableAPI.getMessage();
         assertThat(message.getBody()).isEqualTo("I was routed trough a custom target");
         assertThat(message.getAuthor()).isEqualTo("or i thought so");
+    }
+
+    @Test
+    public void testErrorDecoderAPI(){
+        boolean exceptionHasBeenRaised=false;
+        assertThat(errorDecoderTestAPI).isNotNull();
+        try {
+            errorDecoderTestAPI.fakeRequest();
+        }
+        catch(Exception e){
+            assertThat(e.getCause()).isInstanceOf(FeignTestException.class);
+            assertThat(e.getCause().getMessage()).isEqualTo("Feign addon unit test : received HTTP 404 error code");
+            exceptionHasBeenRaised=true;
+        }
+        assertThat(exceptionHasBeenRaised).isTrue();
     }
 
 }

@@ -11,6 +11,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import org.seedstack.seed.Logging;
 import org.slf4j.Logger;
 
@@ -51,5 +53,11 @@ public class TestResource {
     @Path("/target/message")
     public Message targetSay() {
         return new Message("I was routed trough a custom target", "or i thought so");
+    }
+
+    @GET
+    @Path("/testErrorDecoder")
+    public Response notFound(){
+        return Response.status(Response.Status.NOT_FOUND).entity("There is no content here").build();
     }
 }

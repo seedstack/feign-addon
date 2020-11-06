@@ -14,6 +14,7 @@ import feign.Target;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
@@ -72,6 +73,7 @@ public class FeignConfig {
         @NotNull
         private HystrixWrapperMode hystrixWrapper = HystrixWrapperMode.AUTO;
         private Class<?> fallback;
+        private Class<?extends ErrorDecoder> errorDecoder;
 
         public String getBaseUrl() {
             return baseUrl;
@@ -209,6 +211,14 @@ public class FeignConfig {
 
         public void addInterceptor(Class<? extends RequestInterceptor> interceptor) {
             this.interceptors.add(interceptor);
+        }
+
+        public Class<? extends ErrorDecoder> getErrorDecoder() {
+            return errorDecoder;
+        }
+
+        public void setErrorDecoder(Class<? extends ErrorDecoder> errorDecoder) {
+            this.errorDecoder = errorDecoder;
         }
     }
 }
