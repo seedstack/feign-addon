@@ -1,3 +1,6 @@
+# Version 1.5.0 (2020-11-06)
+
+* [new] Support configuration of injectable custom error decoders using the `errorDecoder` configuration property.
 # Version 1.4.0 (2020-08-05)
 
 * [new] Support configuration of injectable endpoint request interceptors using the `interceptors` configuration property.
