@@ -12,8 +12,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.seedstack.feign.fixtures.FeignTestException;
 import org.seedstack.feign.fixtures.Message;
+import org.seedstack.feign.fixtures.RetryErrorDecoder;
 import org.seedstack.feign.fixtures.TestContract;
 import org.seedstack.feign.fixtures.TestInterceptor;
+import org.seedstack.feign.fixtures.TestRetryer;
 import org.seedstack.feign.fixtures.apis.*;
 import org.seedstack.seed.Configuration;
 import org.seedstack.seed.Logging;
@@ -55,6 +57,15 @@ public abstract class AbstractFeignIT {
 
     @Inject
     private ErrorDecoderTestAPI errorDecoderTestAPI;
+
+    @Inject
+    private RetryerTestAPI retryerTestAPI;
+
+    @Inject
+    private RetryTestAPI retryTestAPI;
+
+    @Inject
+    private RetryGlobalConfTestAPI retryGlobalConfTestAPI;
 
     @Test
     public void feignClientIsInjectable() throws Exception {
@@ -163,4 +174,57 @@ public abstract class AbstractFeignIT {
         assertThat(exceptionHasBeenRaised).isTrue();
     }
 
+    /**
+     * Test endPoint retryer configuration
+     * The retryer is set on the endpoint configuration, it should be called.
+     */
+    @Test
+    public void testRetryer(){
+        try {
+            retryerTestAPI.fakeRequest();
+        }
+        catch (Exception e){
+            assertThat(TestRetryer.getCountCalls()).isGreaterThan(0);
+        }
+        assertThat(TestRetryer.isCalled()).isTrue();
+    }
+
+    /**
+     * Test for retry configured on a particular endPoint
+     * the maxAttempts is configured to 4, expecting 4 calls
+     * This configuration should overide global retry configuration
+     */
+    @Test
+    public void testRetryConfEndpoint(){
+        RetryErrorDecoder.resetCount();
+        boolean exceptionThrown=false;
+        try{
+            retryTestAPI.fakeRequest();
+        }
+        catch (Exception e){
+            //Configuration to 4 attempts
+            assertThat(RetryErrorDecoder.getCallCount()).isEqualTo(4);
+            exceptionThrown=true;
+        }
+        assertThat(exceptionThrown).isTrue();
+    }
+
+    /**
+     * Test for retry global configuration.
+     * The retry feature is de-activated globally, expecting only one call
+     */
+    @Test
+    public void testRetryGlobalConfiguration(){
+        RetryErrorDecoder.resetCount();
+        boolean exceptionThrown=false;
+        try{
+            retryGlobalConfTestAPI.fakeRequest();
+        }
+        catch (Exception e){
+            //Retry is de-activated globally, expecting only 1 call
+            assertThat(RetryErrorDecoder.getCallCount()).isEqualTo(1);
+            exceptionThrown=true;
+        }
+        assertThat(exceptionThrown).isTrue();
+    }
 }
