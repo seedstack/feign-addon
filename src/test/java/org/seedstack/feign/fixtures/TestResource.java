@@ -13,8 +13,16 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import feign.Request;
+import feign.RetryableException;
+import feign.Util;
 import org.seedstack.seed.Logging;
 import org.slf4j.Logger;
+
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.Date;
 
 @Path("/feign")
 public class TestResource {
@@ -59,5 +67,11 @@ public class TestResource {
     @Path("/testErrorDecoder")
     public Response notFound(){
         return Response.status(Response.Status.NOT_FOUND).entity("There is no content here").build();
+    }
+
+    @GET
+    @Path("/testRetry")
+    public Response testRetryer() throws UnknownHostException {
+        return Response.serverError().build();
     }
 }

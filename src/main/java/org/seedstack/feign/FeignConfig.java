@@ -10,6 +10,7 @@ package org.seedstack.feign;
 import feign.Contract;
 import feign.Logger;
 import feign.RequestInterceptor;
+import feign.Retryer;
 import feign.Target;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
@@ -44,6 +45,25 @@ public class FeignConfig {
     public enum HystrixWrapperMode {
         AUTO, ENABLED, DISABLED,
     }
+    private Class<?extends Retryer> retryer;
+    private RetryConfig retry;
+
+    public FeignConfig setRetryer(Class<? extends Retryer> retryerClass){
+        this.retryer=retryerClass;
+        return this;
+    }
+    public Class<?extends Retryer> getRetryer(){
+        return this.retryer;
+    }
+
+    public FeignConfig setRetry(RetryConfig retryConfig){
+        this.retry=retryConfig;
+        return this;
+    }
+
+    public RetryConfig getRetry(){
+        return this.retry;
+    }
 
     @SuppressWarnings("rawtypes")
     public static class EndpointConfig {
@@ -74,6 +94,8 @@ public class FeignConfig {
         private HystrixWrapperMode hystrixWrapper = HystrixWrapperMode.AUTO;
         private Class<?> fallback;
         private Class<?extends ErrorDecoder> errorDecoder;
+        private Class<? extends Retryer> retryer;
+        private RetryConfig retry;
 
         public String getBaseUrl() {
             return baseUrl;
@@ -217,8 +239,77 @@ public class FeignConfig {
             return errorDecoder;
         }
 
-        public void setErrorDecoder(Class<? extends ErrorDecoder> errorDecoder) {
+        public EndpointConfig setErrorDecoder(Class<? extends ErrorDecoder> errorDecoder) {
             this.errorDecoder = errorDecoder;
+            return this;
+        }
+
+        public Class<? extends Retryer> getRetryer(){return retryer;}
+
+        public EndpointConfig setRetryer(Class<? extends Retryer> retryer){
+            this.retryer=retryer;
+            return this;
+        }
+
+        public EndpointConfig setRetry(RetryConfig retryConfig){
+            this.retry=retryConfig;
+            return this;
+        }
+
+        public RetryConfig getRetry(){
+            return this.retry;
+        }
+    }
+    public static class RetryConfig{
+        //Retry default configuration this is the Feign actual default values
+        //As we are wrapping the feign default retryer, we need to redefine them here.
+        public static final int DEFAULT_PERIOD_IN_MILLIS = 100;
+        public static final long DEFAULT_MAX_PERIOD_IN_MILLIS = TimeUnit.SECONDS.toMillis(1);
+        public static final int DEFAULT_MAX_ATTEMPTS = 5;
+        public static final boolean DEFAULT_ACTIVE_RETRY = true;
+
+        private boolean active= DEFAULT_ACTIVE_RETRY;
+        @Min(0)
+        private long period= DEFAULT_PERIOD_IN_MILLIS;
+        @Min(0)
+        private long maxPeriod= DEFAULT_MAX_PERIOD_IN_MILLIS;
+        @Min(1)
+        private int maxAttempts= DEFAULT_MAX_ATTEMPTS;
+
+        public RetryConfig setActive(boolean retryActive){
+            this.active=retryActive;
+            return this;
+        }
+
+        public boolean isActive(){
+            return this.active;
+        }
+
+        public RetryConfig setPeriod(long period){
+            this.period=period;
+            return this;
+        }
+
+        public long getPeriod(){
+            return this.period;
+        }
+
+        public RetryConfig setMaxPeriod(long maxPeriod){
+            this.maxPeriod=maxPeriod;
+            return this;
+        }
+
+        public long getMaxPeriod(){
+            return this.maxPeriod;
+        }
+
+        public RetryConfig setMaxAttempts(int maxAttempts){
+            this.maxAttempts=maxAttempts;
+            return this;
+        }
+
+        public int getMaxAttempts(){
+            return this.maxAttempts;
         }
     }
 }

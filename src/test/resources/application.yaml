@@ -29,6 +29,8 @@ crypto<https>:
         ssl: changeMe
 
 feign:
+  retry:
+    active: false
   endpoints:
     org.seedstack.feign.fixtures.apis.TestAPI:
       baseUrl: ${runtime.web.baseUrl}/feign
@@ -67,6 +69,21 @@ feign:
     org.seedstack.feign.fixtures.apis.ErrorDecoderTestAPI:
       baseUrl: ${runtime.web.baseUrl}/feign
       errorDecoder: org.seedstack.feign.fixtures.TestErrorDecoder
+      hystrixWrapper: DISABLED
+    org.seedstack.feign.fixtures.apis.RetryerTestAPI:
+      baseUrl: ${runtime.web.baseUrl}/feign
+      errorDecoder: org.seedstack.feign.fixtures.RetryErrorDecoder
+      retryer: org.seedstack.feign.fixtures.TestRetryer
+      hystrixWrapper: DISABLED
+    org.seedstack.feign.fixtures.apis.RetryTestAPI:
+      baseUrl: ${runtime.web.baseUrl}/feign
+      errorDecoder: org.seedstack.feign.fixtures.RetryErrorDecoder
+      retry:
+        maxAttempts: 4
+      hystrixWrapper: DISABLED
+    org.seedstack.feign.fixtures.apis.RetryGlobalConfTestAPI:
+      baseUrl: ${runtime.web.baseUrl}/feign
+      errorDecoder: org.seedstack.feign.fixtures.RetryErrorDecoder
       hystrixWrapper: DISABLED
 
 security:

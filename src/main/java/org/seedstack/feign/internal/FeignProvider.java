@@ -58,6 +58,9 @@ class FeignProvider<T> implements Provider<Object> {
             builder.errorDecoder(instantiateErrorDecoder(endpointConfig.getErrorDecoder()));
         }
 
+        //Retry configuration
+        setUpRetryOption(builder, endpointConfig);
+
         // Logger
         builder.logger(instantiateLogger(endpointConfig.getLogger()));
         builder.logLevel(endpointConfig.getLogLevel());
@@ -124,6 +127,51 @@ class FeignProvider<T> implements Provider<Object> {
         }
     }
 
+    private void setUpRetryOption(Feign.Builder builder, FeignConfig.EndpointConfig endpointConfig){
+        //If an endpoint has specific retry configuration, this configuration has priority
+        //Else, applying global configuration if found, and finally, the builder will use default Feign configuration
+        if(endpointConfig.getRetryer() !=null  || endpointConfig.getRetry()!=null){
+            //Setting up specific retry configuration for this builder
+            setUpEndPointConfiguredRetryOption(builder, endpointConfig);
+        }
+        else if(config.getRetryer() !=null || config.getRetry() !=null){
+            //Applying global configuration for this builder
+            setUpGlobalConfiguredRetryOption(builder);
+        }
+    }
+
+    private void setUpEndPointConfiguredRetryOption(Feign.Builder builder, FeignConfig.EndpointConfig endpointConfig){
+        if(endpointConfig.getRetryer() !=null  && endpointConfig.getRetry()!=null){
+            throw SeedException.createNew(FeignErrorCode.ERROR_TWO_RETRYER_ENDPOINT_CONFIGURATIONS).put("endpoint", feignApi.getName());
+        }
+        if(endpointConfig.getRetryer() !=null){
+            builder.retryer(instanciateRetryer(endpointConfig.getRetryer()));
+        }
+        else{
+            applyRetryConfigurationToBuilder( builder, endpointConfig.getRetry());
+        }
+    }
+    private void setUpGlobalConfiguredRetryOption(Feign.Builder builder){
+        if(config.getRetryer() !=null  && config.getRetry()!=null){
+            throw SeedException.createNew(FeignErrorCode.ERROR_TWO_RETRYER_GLOBAL_CONFIGURATIONS);
+        }
+        if(config.getRetryer() !=null){
+            builder.retryer(instanciateRetryer(config.getRetryer()));
+        }
+        else {
+            applyRetryConfigurationToBuilder(builder, config.getRetry());
+        }
+    }
+
+    private void applyRetryConfigurationToBuilder(Feign.Builder builder, FeignConfig.RetryConfig retryConfig){
+        if(retryConfig.isActive()){
+            builder.retryer(new FeignConfigurableRetryer(retryConfig.getPeriod(), retryConfig.getMaxPeriod(), retryConfig.getMaxAttempts()));
+        }else{
+            //De-activating retry for this builder
+            builder.retryer(Retryer.NEVER_RETRY);
+        }
+    }
+
     private Object instantiateFallback(Class<?> fallback) {
         try {
             return injector.getInstance(fallback);
@@ -166,6 +214,16 @@ class FeignProvider<T> implements Provider<Object> {
         }catch (Exception e){
             throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_ERROR_DECODER)
                     .put("class", errorDecoderClass);
+        }
+    }
+
+    private Retryer instanciateRetryer(Class<? extends Retryer> retryerClass){
+        try{
+            return injector.getInstance(retryerClass);
+        }
+        catch(Exception e){
+            throw SeedException.wrap(e, FeignErrorCode.ERROR_INSTANTIATING_RETRYER)
+                    .put("class", retryerClass);
         }
     }
 

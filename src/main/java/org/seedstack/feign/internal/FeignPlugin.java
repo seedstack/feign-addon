@@ -64,6 +64,9 @@ public class FeignPlugin extends AbstractSeedPlugin {
             if(endpointConfig.getErrorDecoder() !=null) {
                 bindings.add(endpointConfig.getErrorDecoder());
             }
+            if(endpointConfig.getRetryer() !=null){
+                bindings.add(endpointConfig.getRetryer());
+            }
             bindings.add(endpointConfig.getLogger());
             Class<?> fallback = endpointConfig.getFallback();
             if (fallback != null) {
@@ -77,6 +80,10 @@ public class FeignPlugin extends AbstractSeedPlugin {
         // Retrieve SSL context if any
         initContext.dependency(CryptoPlugin.class).sslContext().ifPresent(sslContext -> this.sslContext = sslContext);
 
+        //Adds binding for general retryer
+        if(getConfiguration(FeignConfig.class).getRetryer()!=null) {
+            bindings.add(getConfiguration(FeignConfig.class).getRetryer());
+        }
         return InitState.INITIALIZED;
     }
 
