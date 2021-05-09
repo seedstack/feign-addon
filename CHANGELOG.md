@@ -1,4 +1,4 @@
-# Version 1.5.0 (2020-11-06)
+# Version 1.5.0 (2021-05-09)
 
 * [new] Support configuration of injectable custom error decoders using the `errorDecoder` configuration property.
 * [new] Support configuration of injectable retryers using the `retryer` configuration property (global level or endpoint level).
